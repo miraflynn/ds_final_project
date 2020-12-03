@@ -57,11 +57,26 @@ raw_robusta <- read_csv("https://raw.githubusercontent.com/jldbc/coffee-quality-
 all_ratings <- bind_rows(raw_arabica, raw_robusta) %>% 
   select(-x1) %>% 
   select(total_cup_points, species, everything()) %>%
+  # Cleans up Harvest Year
   mutate(
     harvest_year = harvest_year %>% gsub(pattern = ".*20", replacement = "20"),
     harvest_year = harvest_year %>% gsub(pattern = ".*/", replacement = "20"),
     harvest_year = harvest_year %>% substr(start = 1, stop = 4),
     harvest_year = harvest_year %>% as.integer()
+  ) %>%
+  #Fixes altitude readings
+  mutate(
+    altitude = ifelse(altitude == 190164, 
+                      1901,
+                      ifelse(altitude == 1901.64, 
+                             1901, 
+                             ifelse(altitude == "1100.00 mosl", 
+                                    1100, 
+                                    ifelse(altitude == "11000 metros", 
+                                           1100, 
+                                           altitude)))),
+    altitude_mean_meters = ifelse(altitude_mean_meters >= 9000, altitude, altitude_mean_meters),
+    altitude_mean_meters = as.double(altitude_mean_meters)
   )
 
 all_ratings %>% 
