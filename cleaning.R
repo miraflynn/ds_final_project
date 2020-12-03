@@ -61,5 +61,5 @@ all_ratings <- bind_rows(raw_arabica, raw_robusta) %>%
 all_ratings %>% 
   skimr::skim()
 
-all_ratings %>% 
-  write_csv("2020/2020-07-07/coffee_ratings.csv")
+# all_ratings %>% 
+#   write_csv("2020/2020-07-07/coffee_ratings.csv")
