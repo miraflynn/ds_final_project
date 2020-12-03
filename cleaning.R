@@ -56,10 +56,18 @@ raw_robusta <- read_csv("https://raw.githubusercontent.com/jldbc/coffee-quality-
 
 all_ratings <- bind_rows(raw_arabica, raw_robusta) %>% 
   select(-x1) %>% 
-  select(total_cup_points, species, everything())
+  select(total_cup_points, species, everything()) %>%
+  mutate(
+    harvest_year = harvest_year %>% gsub(pattern = ".*20", replacement = "20"),
+    harvest_year = harvest_year %>% gsub(pattern = ".*/", replacement = "20"),
+    harvest_year = harvest_year %>% substr(start = 1, stop = 4),
+    harvest_year = harvest_year %>% as.integer()
+  )
 
 all_ratings %>% 
   skimr::skim()
+
+
 
 # all_ratings %>% 
 #   write_csv("2020/2020-07-07/coffee_ratings.csv")
