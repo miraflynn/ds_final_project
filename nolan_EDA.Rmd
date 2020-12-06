@@ -66,6 +66,6 @@ fit_coffee_eda <-
     family = "binomial"
   )
 
-fit_coffee_eda %>% tidy()
+fit_tidy <- fit_coffee_eda %>% generics::tidy()
 ```
 
