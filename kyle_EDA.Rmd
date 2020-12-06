@@ -27,7 +27,7 @@ all_ratings %>%
   #   altitude_mean_meters = ifelse(altitude_mean_meters >= 9000, altitude, altitude_mean_meters),
   #   altitude_mean_meters = as.double(altitude_mean_meters)
   #   ) %>%
-  # filter(altitude_mean_meters >= 9000) %>%
+  filter(altitude_mean_meters == 1100) %>%
   glimpse()
 ```
 ```{r}
