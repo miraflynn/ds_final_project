@@ -75,6 +75,8 @@ all_ratings <- bind_rows(raw_arabica, raw_robusta) %>%
                                     ifelse(altitude == "11000 metros", 
                                            1100, 
                                            altitude)))),
+    altitude_low_meters  = ifelse(altitude_low_meters  >= 9000, altitude, altitude_low_meters),
+    altitude_high_meters = ifelse(altitude_high_meters >= 9000, altitude, altitude_high_meters),
     altitude_mean_meters = ifelse(altitude_mean_meters >= 9000, altitude, altitude_mean_meters),
     altitude_mean_meters = as.double(altitude_mean_meters)
   ) %>% 
@@ -86,8 +88,14 @@ all_ratings <- bind_rows(raw_arabica, raw_robusta) %>%
   #Fixes expiration into date format
   mutate(
     expiration = expiration %>% gsub(pattern = "st,|nd,|rd,|th,", replacement = ""),
-    expiration = expiration %>% as.Date(format = "%B %d %Y")
-  )
+    expiration = expiration %>% as.Date(format = "%B %d %Y"),
+    altitude_low_meters  = as.double(altitude_low_meters),
+    altitude_high_meters = as.double(altitude_high_meters),
+    altitude_mean_meters = as.double(altitude_mean_meters),
+  ) %>%
+  #Remove one rating with 0 cup points
+  filter(total_cup_points != 0)
+
 
 all_ratings %>% 
   skimr::skim()
