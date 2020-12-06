@@ -78,9 +78,15 @@ all_ratings <- bind_rows(raw_arabica, raw_robusta) %>%
     altitude_mean_meters = ifelse(altitude_mean_meters >= 9000, altitude, altitude_mean_meters),
     altitude_mean_meters = as.double(altitude_mean_meters)
   ) %>% 
+  #Fixes grading_date into date format
   mutate(
-      grading_date = grading_date %>% gsub(pattern = "st,|nd,|rd,|th,", replacement = ""),
-      grading_date = grading_date %>% as.Date(format = "%B %d %Y")
+    grading_date = grading_date %>% gsub(pattern = "st,|nd,|rd,|th,", replacement = ""),
+    grading_date = grading_date %>% as.Date(format = "%B %d %Y"),
+  ) %>% 
+  #Fixes expiration into date format
+  mutate(
+    expiration = expiration %>% gsub(pattern = "st,|nd,|rd,|th,", replacement = ""),
+    expiration = expiration %>% as.Date(format = "%B %d %Y")
   )
 
 all_ratings %>% 
