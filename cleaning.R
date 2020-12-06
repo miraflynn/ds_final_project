@@ -1,5 +1,6 @@
 library(tidyverse)
 library(lubridate)
+library(dplyr)
 url_states_current <- "https://covidtracking.com/api/states.csv"
 url_states_historical <- "http://covidtracking.com/api/states/daily.csv"
 filename_states_current <- "./data/states_current.csv"
@@ -38,13 +39,58 @@ curl::curl_download(
 df_states_current <- read_csv(filename_states_current)
 df_states_historical <- read_csv(filename_states_historical)
 
+filename_abbreviations <- "./data/states_with_abbrevs.csv"
+df_abbreviations <- read_csv(filename_abbreviations)
+
+df_states_historical <- df_states_historical %>%
+  mutate(
+    state_abbreviation = state,
+    .after = date,
+    .keep = "unused"
+  ) %>%
+  left_join(df_abbreviations) %>%
+  mutate(
+    state = state,
+    .after = state_abbreviation
+  )
+
+
 df_usa <-
   df_states_historical %>%
-  mutate(date = ymd(date)) %>%
+  mutate(
+    date = ymd(date)
+  ) %>%
   group_by(date) %>%
   summarize_at(
     c("positive", "totalTestResults", "death", "positiveIncrease", "totalTestResultsIncrease", "deathIncrease"),
     ~sum(., na.rm = TRUE)
-  )
+  ) 
 
 # https://github.com/zdelrosario/tidy-exercises/blob/master/2020/2020-03-27-covid-tracking/proc.Rmd
+
+
+filename_population <- "./data/ACSDT5Y2018.B01003_data_with_overlays_2020-10-22T174815.csv"
+
+df_pop <- read_csv(filename_population, skip = 1) %>%
+  select(
+    population = `Estimate!!Total`,
+    state
+  )
+df_states_historical <- df_states_historical %>%
+  right_join(df_pop, by = "state") %>%
+  relocate(
+    state,
+    population,
+    .after = state_abbreviation
+  )
+
+remove(list = c(
+  "df_abbreviations", 
+  "df_pop", 
+  "filename_abbreviations", 
+  "filename_population",
+  "filename_states_current",
+  "filename_states_historical",
+  "url_states_current",
+  "url_states_historical"
+  ))
