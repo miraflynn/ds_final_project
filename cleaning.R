@@ -1,10 +1,18 @@
 library(tidyverse)
 library(lubridate)
 library(dplyr)
+
+# https://github.com/zdelrosario/tidy-exercises/blob/master/2020/2020-03-27-covid-tracking/proc.Rmd
+
+
 url_states_current <- "https://covidtracking.com/api/states.csv"
 url_states_historical <- "http://covidtracking.com/api/states/daily.csv"
 filename_states_current <- "./data/states_current.csv"
 filename_states_historical <- "./data/states_historical.csv"
+# I typed this up so we wouldn't have a giant vector in this file
+filename_abbreviations <- "./data/states_with_abbrevs.csv"
+# From C06
+filename_population <- "./data/ACSDT5Y2018.B01003_data_with_overlays_2020-10-22T174815.csv"
 theme_common <- function() {
   theme_minimal() %+replace%
     theme(
@@ -38,19 +46,34 @@ curl::curl_download(
 
 df_states_current <- read_csv(filename_states_current)
 df_states_historical <- read_csv(filename_states_historical)
-
-filename_abbreviations <- "./data/states_with_abbrevs.csv"
 df_abbreviations <- read_csv(filename_abbreviations)
+df_pop <- read_csv(filename_population, skip = 1) %>%
+  # Selecting because we don't need the error estimate and FIPS code
+  select(
+    population = `Estimate!!Total`,
+    state
+  )
 
 df_states_historical <- df_states_historical %>%
-  mutate(
+  # Change state to state_abbreviation, put it at the front, and don't keep the state value
+  mutate( 
     state_abbreviation = state,
     .after = date,
     .keep = "unused"
   ) %>%
+  # Join in the state names from df_abbreviations
   left_join(df_abbreviations) %>%
-  mutate(
-    state = state,
+  # Organize columns- not necessary, but nice
+  relocate(
+    state,
+    .after = state_abbreviation
+  ) %>%
+  # Add in population data
+  right_join(df_pop, by = "state") %>%
+  # Organize columns- not necessary, but nice
+  relocate(
+    state,
+    population,
     .after = state_abbreviation
   )
 
@@ -64,30 +87,20 @@ df_usa <-
   summarize_at(
     c("positive", "totalTestResults", "death", "positiveIncrease", "totalTestResultsIncrease", "deathIncrease"),
     ~sum(., na.rm = TRUE)
-  ) 
-
-# https://github.com/zdelrosario/tidy-exercises/blob/master/2020/2020-03-27-covid-tracking/proc.Rmd
-
-
-filename_population <- "./data/ACSDT5Y2018.B01003_data_with_overlays_2020-10-22T174815.csv"
-
-df_pop <- read_csv(filename_population, skip = 1) %>%
-  select(
-    population = `Estimate!!Total`,
-    state
-  )
-df_states_historical <- df_states_historical %>%
-  right_join(df_pop, by = "state") %>%
-  relocate(
-    state,
-    population,
-    .after = state_abbreviation
+  ) %>%
+  # Add in US total population
+  mutate(
+    population = df_pop %>%
+      filter(state == "United States") %>%
+      pull(population)
   )
 
+
+# Get rid of working variables for cleanliness when this file is used as a source
 remove(list = c(
-  "df_abbreviations", 
-  "df_pop", 
-  "filename_abbreviations", 
+  "df_abbreviations",
+  "df_pop",
+  "filename_abbreviations",
   "filename_population",
   "filename_states_current",
   "filename_states_historical",
