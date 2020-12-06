@@ -9,60 +9,247 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 
 ```{r setup}
 library(tidyverse)
+library(modelr)
 source("cleaning.R")
+set.seed(42)
 ```
 
 
 ```{r}
 # all_ratings %>% head()
-all_ratings %>% summary()
+# all_ratings %>% summary()
 ```
 
 
 ```{r}
-all_ratings %>%
-  ggplot() +
-  geom_point(aes(x = harvest_year, y = total_cup_points))
+# all_ratings %>%
+#   ggplot() +
+#   geom_point(aes(x = harvest_year, y = total_cup_points))
 ```
 
 ```{r}
-fit_coffee_eda <-
-  glm(
-    formula = total_cup_points/100 ~ 
-      owner + 
-      country_of_origin + 
-      company + 
-      region +
-      producer +
-      number_of_bags +
-      bag_weight +
-      harvest_year +
-      variety +
-      processing_method +
-      category_one_defects +
-      quakers +
-      color +
-      category_two_defects +
-      altitude_mean_meters,
-    data = all_ratings %>%
-      mutate(
-        owner = owner %>% as.factor(),
-        country_of_origin = country_of_origin %>% as.factor(),
-        company = company %>% as.factor(),
-        region = region %>% as.factor(),
-        producer = producer %>% as.factor(),
-        number_of_bags = number_of_bags %>% as.numeric(),
-        bag_weight = bag_weight %>% as.factor(),
-        harvest_year = harvest_year %>% as.numeric(),
-        variety = variety %>% as.factor(),
-        processing_method = processing_method %>% as.factor(),
-        category_one_defects = category_one_defects %>% as.numeric(),
-        quakers = quakers %>% as.numeric(),
-        color = color %>% as.factor(),
-        category_two_defects = category_two_defects %>% as.numeric(),
-        altitude_mean_meters = altitude_mean_meters %>% as.numeric()
-      ),
-    family = "binomial"
-  )
-fit_tidy <- fit_coffee_eda %>% generics::tidy()
+#If you do not have an ID per row, use the following code to create an ID
+# all_ratings <- all_ratings %>% 
+#   mutate(
+#     id = row_number(),
+#     total_cup_points = total_cup_points / 100,
+#     owner = owner %>% as.factor(),
+#     country_of_origin = country_of_origin %>% as.factor(),
+#     company = company %>% as.factor(),
+#     region = region %>% as.factor(),
+#     producer = producer %>% as.factor(),
+#     number_of_bags = number_of_bags %>% as.numeric(),
+#     bag_weight = bag_weight %>% as.factor(),
+#     harvest_year = harvest_year %>% as.numeric(),
+#     variety = variety %>% as.factor(),
+#     processing_method = processing_method %>% as.factor(),
+#     category_one_defects = category_one_defects %>% as.numeric(),
+#     quakers = quakers %>% as.numeric(),
+#     color = color %>% as.factor(),
+#     category_two_defects = category_two_defects %>% as.numeric(),
+#     altitude_mean_meters = altitude_mean_meters %>% as.numeric()
+#   )
+# #Check IDs
+# # head(all_ratings$id) 
+# #Create training set
+# train <- all_ratings %>% slice_sample(prop = .70)
+# #Create test set
+# test  <- all_ratings %>% anti_join(train, by = 'id')
 ```
+
+```{r}
+# fit_coffee_eda <-
+#   glm(
+#     formula = total_cup_points ~ 
+#       # owner + 
+#       country_of_origin +
+#       # company + 
+#       # region +
+#       # producer +
+#       number_of_bags +
+#       # bag_weight +
+#       harvest_year +
+#       # variety +
+#       processing_method +
+#       category_one_defects +
+#       quakers +
+#       color +
+#       category_two_defects +
+#       altitude_mean_meters,
+#     data = all_ratings,
+#     family = "binomial"
+#   )
+# fit_tidy <- fit_coffee_eda %>% generics::tidy()
+# rsquare(fit_coffee_eda, train)
+# rsquare(fit_coffee_eda, test)
+```
+
+# Country-level
+<!-- -------------------------------------------------- -->
+
+
+```{r vis-usa}
+df_usa %>%
+  ggplot(aes(date)) +
+  geom_point(aes(y = death, color = "Deaths")) +
+  geom_point(aes(y = positive, color = "Cases")) +
+  scale_y_log10()
+```
+
+```{r usa-deaths-v-increase}
+df_usa %>%
+  ggplot(aes(death, deathIncrease)) +
+  geom_point() +
+  geom_smooth() +
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+# State-level
+<!-- -------------------------------------------------- -->
+
+### Timeline: Cases
+
+```{r timeline-cases}
+df_states_historical %>%
+  mutate(date = ymd(date)) %>%
+  group_by(state) %>%
+  mutate(max_positive = max(positive)) %>%
+  ungroup() %>%
+  filter(
+    ## dense_rank(-max_positive) <= 10,
+    ## state %in% c("CA", "NY", "WA", "MA", "HI")
+    state %in% c("TX", "FL", "GA", "SC", "NC", "NY", "MA")
+  ) %>%
+  ggplot(aes(
+    x = date,
+    y = positive,
+    color = fct_reorder2(state, date, positive)
+    ## y = death,
+    ## color = fct_reorder2(state, date, death)
+  )) +
+  geom_line() +
+  ## scale_x_log10() +
+  scale_y_log10(labels = scales::label_scientific()) +
+  scale_color_discrete(name = "State") +
+  theme_common()
+```
+
+### Timeline: Deaths
+
+```{r timeline-cases}
+df_states_historical %>%
+  mutate(date = ymd(date)) %>%
+  group_by(state) %>%
+  mutate(max_positive = max(positive)) %>%
+  ungroup() %>%
+  filter(
+    ## dense_rank(-max_positive) <= 10,
+    state %in% c("CA", "NY", "WA", "MA")
+  ) %>%
+  ggplot(aes(
+    x = date,
+    y = death,
+    color = fct_reorder2(state, date, death)
+  )) +
+  geom_line(size = 1) +
+  scale_y_log10() +
+  scale_color_discrete(name = "State") +
+  theme_common()
+```
+
+### New vs Total plots
+
+```{r vis-cases}
+df_states_historical %>%
+  group_by(state) %>%
+  mutate(max_positive = max(positive)) %>%
+  ungroup() %>%
+  filter(
+    positiveIncrease > 0,
+    ## dense_rank(-max_positive) <= 10
+    state %in% c("CA", "NY", "WA", "MA")
+  ) %>%
+  ggplot(aes(
+    positive,
+    positiveIncrease,
+    color = state
+  )) +
+  geom_smooth(se = FALSE, size = 2) +
+  ## geom_line() +
+  ## geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme(legend.position = "bottom")
+```
+
+```{r vis-deaths}
+df_states_historical %>%
+  group_by(state) %>%
+  mutate(max_positive = max(positive)) %>%
+  ungroup() %>%
+  filter(
+    positiveIncrease > 0,
+    ## dense_rank(-max_positive) <= 10
+    state %in% c("CA", "NY", "WA", "MA")
+  ) %>%
+  ggplot(aes(
+    death,
+    deathIncrease,
+    color = state
+  )) +
+  geom_smooth(se = FALSE, size = 2) +
+  ## geom_line() +
+  ## geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme(legend.position = "bottom")
+```
+
+```{r vis-tests}
+df_states_historical %>%
+  group_by(state) %>%
+  mutate(max_test = max(totalTestResults)) %>%
+  ungroup() %>%
+  filter(
+    totalTestResults > 0,
+    ## dense_rank(-max_test) <= 5
+    str_detect(state, "HI")
+  ) %>%
+  ggplot(aes(
+    totalTestResults,
+    totalTestResultsIncrease,
+    color = state
+  )) +
+  geom_smooth(se = FALSE, size = 2) +
+  geom_line() +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_common()+
+  theme(legend.position = "bottom")
+```
+
+
+```{r vis-normalized}
+df_states_historical %>%
+  group_by(state) %>%
+  mutate(max_positive = max(positive)) %>%
+  ungroup() %>%
+  filter(
+    positiveIncrease > 0,
+    dense_rank(-max_positive) <= 8
+  ) %>%
+  ggplot(aes(
+    positive / totalTestResults,
+    positiveIncrease / totalTestResults,
+    color = state
+  )) +
+  geom_smooth(se = FALSE, size = 2) +
+  geom_line() +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme(legend.position = "bottom")
+```
+

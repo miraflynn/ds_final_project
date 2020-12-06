@@ -1,106 +1,50 @@
 library(tidyverse)
+library(lubridate)
+url_states_current <- "https://covidtracking.com/api/states.csv"
+url_states_historical <- "http://covidtracking.com/api/states/daily.csv"
+filename_states_current <- "./data/states_current.csv"
+filename_states_historical <- "./data/states_historical.csv"
+theme_common <- function() {
+  theme_minimal() %+replace%
+    theme(
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 16),
+      axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 16, angle = 90),
+      legend.title = element_text(size = 16),
+      legend.text = element_text(size = 12),
+      strip.text.x = element_text(size = 12),
+      strip.text.y = element_text(size = 12),
+      panel.grid.major = element_line(color = "grey90"),
+      panel.grid.minor = element_line(color = "grey90"),
+      aspect.ratio = 4 / 4,
+      plot.margin = unit(c(t = +0, b = +0, r = +0, l = +0), "cm"),
+      plot.title = element_text(size = 18),
+      plot.title.position = "plot",
+      plot.subtitle = element_text(size = 16),
+      plot.caption = element_text(size = 12)
+    )
+}
 
-raw_arabica <- read_csv("https://raw.githubusercontent.com/jldbc/coffee-quality-database/master/data/arabica_data_cleaned.csv") %>% 
-  janitor::clean_names()
+curl::curl_download(
+  url_states_current,
+  destfile = filename_states_current
+)
+curl::curl_download(
+  url_states_historical,
+  destfile = filename_states_historical
+)
 
-raw_robusta <- read_csv("https://raw.githubusercontent.com/jldbc/coffee-quality-database/master/data/robusta_data_cleaned.csv",
-                        col_types = cols(
-                          X1 = col_double(),
-                          Species = col_character(),
-                          Owner = col_character(),
-                          Country.of.Origin = col_character(),
-                          Farm.Name = col_character(),
-                          Lot.Number = col_character(),
-                          Mill = col_character(),
-                          ICO.Number = col_character(),
-                          Company = col_character(),
-                          Altitude = col_character(),
-                          Region = col_character(),
-                          Producer = col_character(),
-                          Number.of.Bags = col_double(),
-                          Bag.Weight = col_character(),
-                          In.Country.Partner = col_character(),
-                          Harvest.Year = col_character(),
-                          Grading.Date = col_character(),
-                          Owner.1 = col_character(),
-                          Variety = col_character(),
-                          Processing.Method = col_character(),
-                          Fragrance...Aroma = col_double(),
-                          Flavor = col_double(),
-                          Aftertaste = col_double(),
-                          Salt...Acid = col_double(),
-                          Balance = col_double(),
-                          Uniform.Cup = col_double(),
-                          Clean.Cup = col_double(),
-                          Bitter...Sweet = col_double(),
-                          Cupper.Points = col_double(),
-                          Total.Cup.Points = col_double(),
-                          Moisture = col_double(),
-                          Category.One.Defects = col_double(),
-                          Quakers = col_double(),
-                          Color = col_character(),
-                          Category.Two.Defects = col_double(),
-                          Expiration = col_character(),
-                          Certification.Body = col_character(),
-                          Certification.Address = col_character(),
-                          Certification.Contact = col_character(),
-                          unit_of_measurement = col_character(),
-                          altitude_low_meters = col_double(),
-                          altitude_high_meters = col_double(),
-                          altitude_mean_meters = col_double()
-                        )) %>% 
-  janitor::clean_names() %>% 
-  rename(acidity = salt_acid, sweetness = bitter_sweet,
-         aroma = fragrance_aroma, body = mouthfeel,uniformity = uniform_cup)
+df_states_current <- read_csv(filename_states_current)
+df_states_historical <- read_csv(filename_states_historical)
 
+df_usa <-
+  df_states_historical %>%
+  mutate(date = ymd(date)) %>%
+  group_by(date) %>%
+  summarize_at(
+    c("positive", "totalTestResults", "death", "positiveIncrease", "totalTestResultsIncrease", "deathIncrease"),
+    ~sum(., na.rm = TRUE)
+  )
 
-all_ratings <- bind_rows(raw_arabica, raw_robusta) %>% 
-  select(-x1) %>% 
-  select(total_cup_points, species, everything()) %>%
-  # Cleans up Harvest Year
-  mutate(
-    harvest_year = harvest_year %>% gsub(pattern = ".*20", replacement = "20"),
-    harvest_year = harvest_year %>% gsub(pattern = ".*/", replacement = "20"),
-    harvest_year = harvest_year %>% substr(start = 1, stop = 4),
-    harvest_year = harvest_year %>% as.integer()
-  ) %>%
-  #Fixes altitude readings
-  mutate(
-    altitude = ifelse(altitude == 190164, 
-                      1901,
-                      ifelse(altitude == 1901.64, 
-                             1901, 
-                             ifelse(altitude == "1100.00 mosl", 
-                                    1100, 
-                                    ifelse(altitude == "11000 metros", 
-                                           1100, 
-                                           altitude)))),
-    altitude_low_meters  = ifelse(altitude_low_meters  >= 9000, altitude, altitude_low_meters),
-    altitude_high_meters = ifelse(altitude_high_meters >= 9000, altitude, altitude_high_meters),
-    altitude_mean_meters = ifelse(altitude_mean_meters >= 9000, altitude, altitude_mean_meters),
-    altitude_mean_meters = as.double(altitude_mean_meters)
-  ) %>% 
-  #Fixes grading_date into date format
-  mutate(
-    grading_date = grading_date %>% gsub(pattern = "st,|nd,|rd,|th,", replacement = ""),
-    grading_date = grading_date %>% as.Date(format = "%B %d %Y"),
-  ) %>% 
-  #Fixes expiration into date format
-  mutate(
-    expiration = expiration %>% gsub(pattern = "st,|nd,|rd,|th,", replacement = ""),
-    expiration = expiration %>% as.Date(format = "%B %d %Y"),
-    altitude_low_meters  = as.double(altitude_low_meters),
-    altitude_high_meters = as.double(altitude_high_meters),
-    altitude_mean_meters = as.double(altitude_mean_meters),
-  ) %>%
-  #Remove one rating with 0 cup points
-  filter(total_cup_points != 0)
-
-
-all_ratings %>% 
-  skimr::skim()
-
-
-
-# all_ratings %>% 
-#   write_csv("2020/2020-07-07/coffee_ratings.csv")
+# https://github.com/zdelrosario/tidy-exercises/blob/master/2020/2020-03-27-covid-tracking/proc.Rmd
