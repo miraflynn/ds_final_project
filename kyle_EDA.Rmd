@@ -14,43 +14,56 @@ source("cleaning.R")
 
 ```{r}
 all_ratings %>%
-  # mutate(
-  #   altitude = ifelse(altitude == 190164, 
-  #                     1901,
-  #                     ifelse(altitude == 1901.64, 
-  #                            1901, 
-  #                            ifelse(altitude == "1100.00 mosl", 
-  #                                   1100, 
-  #                                   ifelse(altitude == "11000 metros", 
-  #                                          1100, 
-  #                                          altitude)))),
-  #   altitude_mean_meters = ifelse(altitude_mean_meters >= 9000, altitude, altitude_mean_meters),
-  #   altitude_mean_meters = as.double(altitude_mean_meters)
-  #   ) %>%
-  # filter(altitude_mean_meters >= 9000) %>%
   glimpse()
 ```
 ```{r}
 all_ratings %>%
-  filter(altitude_mean_meters <= 9000) %>%
   ggplot() +
   geom_histogram(aes(altitude_mean_meters))
+```
+
+```{r}
+all_ratings %>%
+  group_by(country_of_origin)%>%
+  mutate(count = n()) %>%
+  ungroup()%>%
+  mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
+  ggplot() +
+  geom_bar(aes(country_of_origin)) +
+  coord_flip()
 ```
 
 
 
 ```{r}
 all_ratings %>%
-  filter(altitude_mean_meters <= 3000) %>%
   filter(total_cup_points >= 50) %>%
+  mutate(country_of_origin = fct_reorder(country_of_origin, total_cup_points)) %>%
   ggplot() +
-  geom_point(aes(altitude_mean_meters, total_cup_points))
+  geom_boxplot(aes(country_of_origin, total_cup_points)) +
+  coord_flip()
 ```
 
+```{r}
+all_ratings %>%
+  filter(total_cup_points >= 50) %>%
+  mutate(alt_bins=cut_width(altitude_mean_meters, width=500, boundary=0)) %>%
+  #mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
+  ggplot() +
+  geom_boxplot(aes(alt_bins, total_cup_points)) +
+  coord_flip()
+```
+```{r}
+all_ratings %>%
+  lm(data = .,
+    formula = total_cup_points ~ aroma + flavor + aftertaste + acidity + body + balance + uniformity + clean_cup + sweetness
+    # formula = total_cup_points ~ category_two_defects + category_one_defects
+  ) %>%
+  tidy()
+```
 
+```{r}
+all_ratings %>%
+  mutate(ratio = total_cup_points/cupper_points)
+```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
