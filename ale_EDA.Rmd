@@ -1,28 +1,43 @@
 ---
-title: "ale_EDA"
-output: html_document
+title: "R Notebook"
+output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 ```{r setup}
 library(tidyverse)
+library(modelr)
 source("cleaning.R")
+set.seed(42)
 ```
-## Including Plots
+ 
+```{r vis-usa}
+df_states_racial_comb %>% summary()
+df_states_racial_comb %>% 
+  ggplot()+
+  facet_wrap(race) +
+  ggplot()
+  
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
+
+```{r}
+df_states_racial_comb %>%
+  group_by(race) %>% 
+  summarise(
+    deaths_per_cases = sum(deaths, na.rm = "TRUE")/sum(cases, na.rm = "TRUE"),
+    hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+    groups = "TRUE") %>% 
+  ggplot(aes(x = race)) +
+  geom_col(aes(y = deaths_per_cases))
+```
+
+
+
+
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
