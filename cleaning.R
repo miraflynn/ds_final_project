@@ -144,7 +144,6 @@ df_states_racial_comb <-
     tests = "Tests"
   ) %>%
   mutate(
-    date = ymd(date), 
     cases_per_100k = cases/race_estimate *100000,
     deaths_per_100k = deaths/race_estimate *100000,
     hosp_per_100k = hosp/race_estimate *100000,
