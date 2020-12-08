@@ -10,60 +10,185 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r setup}
 library(tidyverse)
 source("cleaning.R")
+set.seed(42)
 ```
 
+
 ```{r}
-all_ratings %>%
-  glimpse()
+df_states_racial_comb %>%
+  mutate(
+    cases_per_100k = cases/race_estimate *100000,
+    deaths_per_100k = deaths/race_estimate *100000,
+    hosp_per_100k = hosp/race_estimate *100000,
+    tests_per_100k = tests/race_estimate *100000
+  )
+
 ```
 ```{r}
-all_ratings %>%
+df_states_racial_comb %>%
+  filter(date == 20201206) %>%
+  filter(deaths <= 3000) %>%
   ggplot() +
-  geom_histogram(aes(altitude_mean_meters))
-```
-
-```{r}
-all_ratings %>%
-  group_by(country_of_origin)%>%
-  mutate(count = n()) %>%
-  ungroup()%>%
-  mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
-  ggplot() +
-  geom_bar(aes(country_of_origin)) +
-  coord_flip()
-```
-
-
-
-```{r}
-all_ratings %>%
-  filter(total_cup_points >= 50) %>%
-  mutate(country_of_origin = fct_reorder(country_of_origin, total_cup_points)) %>%
-  ggplot() +
-  geom_boxplot(aes(country_of_origin, total_cup_points)) +
-  coord_flip()
-```
-
-```{r}
-all_ratings %>%
-  filter(total_cup_points >= 50) %>%
-  mutate(alt_bins=cut_width(altitude_mean_meters, width=500, boundary=0)) %>%
-  #mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
-  ggplot() +
-  geom_boxplot(aes(alt_bins, total_cup_points)) +
-  coord_flip()
+  geom_point(aes(deaths, race_estimate, color = race))
 ```
 ```{r}
-all_ratings %>%
-  lm(data = .,
-    formula = total_cup_points ~ aroma + flavor + aftertaste + acidity + body + balance + uniformity + clean_cup + sweetness
-    # formula = total_cup_points ~ category_two_defects + category_one_defects
+df_states_racial_comb %>%
+  mutate(
+    cases_per_100k = cases/race_estimate *100000,
+    deaths_per_100k = deaths/race_estimate *100000,
+    hosp_per_100k = hosp/race_estimate *100000,
+    tests_per_100k = tests/race_estimate *100000
   ) %>%
-  tidy()
+  filter(deaths_per_100k <= 1500) %>%
+  mutate(race = fct_reorder(race, deaths_per_100k)) %>%
+  ggplot() +
+  geom_boxplot((aes(race, deaths_per_100k)))
 ```
 
+
 ```{r}
-all_ratings %>%
-  mutate(ratio = total_cup_points/cupper_points)
+df_usa %>%
+  ggplot() +
+  geom_line(aes(date, positiveIncrease))+
+  geom_line(aes(date, totalTestResultsIncrease))
 ```
+```{r}
+df_states_historical %>%
+  ggplot()+
+  geom_bar(aes(dataQualityGrade))
+```
+
+
+```{r}
+df_states_racial_comb %>%
+  group_by(date,category) %>%
+  summarise()
+  ggplot() +
+  geo
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ```{r}
+# all_ratings %>%
+#   glimpse()
+# ```
+# ```{r}
+# all_ratings %>%
+#   ggplot() +
+#   geom_histogram(aes(altitude_mean_meters))
+# ```
+# 
+# ```{r}
+# all_ratings %>%
+#   group_by(country_of_origin)%>%
+#   mutate(count = n()) %>%
+#   ungroup()%>%
+#   mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
+#   ggplot() +
+#   geom_bar(aes(country_of_origin)) +
+#   coord_flip()
+# ```
+# 
+# 
+# 
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 50) %>%
+#   mutate(variety = fct_reorder(variety, total_cup_points)) %>%
+#   ggplot() +
+#   geom_boxplot(aes(variety, total_cup_points)) +
+#   coord_flip()
+# ```
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 50) %>%
+#   mutate(processing_method = fct_reorder(processing_method, total_cup_points)) %>%
+#   ggplot() +
+#   geom_boxplot(aes(processing_method, total_cup_points)) +
+#   coord_flip()
+# ```
+# 
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 50) %>%
+#   ggplot() +
+#   geom_point(aes(altitude_mean_meters, total_cup_points)) +
+#   coord_flip()
+# ```
+# 
+# 
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 50) %>%
+#   mutate(alt_bins=cut_width(altitude_mean_meters, width=500, boundary=0)) %>%
+#   #mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
+#   ggplot() +
+#   geom_boxplot(aes(alt_bins, total_cup_points)) +
+#   coord_flip()
+# ```
+# ```{r}
+# all_ratings %>%
+#   lm(data = .,
+#     formula = total_cup_points ~ aroma + flavor + aftertaste + acidity + body + balance + uniformity + clean_cup + sweetness
+#     # formula = total_cup_points ~ category_two_defects + category_one_defects
+#   ) %>%
+#   tidy()
+# ```
+# 
+# ```{r}
+# all_ratings %>%
+#   mutate(sum_variables = aroma + flavor + aftertaste + acidity + body + balance + uniformity + clean_cup + sweetness + cupper_points) %>%
+#   select(total_cup_points, sum_variables)
+# ```
+# 
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 65) %>%
+#   ggplot() +
+#   geom_point(aes(number_of_bags,total_cup_points)) +
+#   coord_flip()
+# ```
 
