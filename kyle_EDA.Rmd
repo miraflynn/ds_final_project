@@ -26,6 +26,8 @@ df_states_racial_comb %>%
 ```
 ```{r}
 df_states_racial_comb %>%
+  # Note from Nolan: I made date into a date object, this filter will work:
+  # filter(date == "2020-12-06") %>%
   filter(date == 20201206) %>%
   filter(deaths <= 3000) %>%
   ggplot() +
