@@ -122,6 +122,9 @@ df_states_historical <- df_states_historical %>%
     state,
     population,
     .after = state_abbreviation
+  ) %>%
+  mutate(
+    date = date %>% as.character() %>% as.Date(format="%Y%m%d")
   )
 
 df_states_racial_comb <-
@@ -146,6 +149,17 @@ df_states_racial_comb <-
     deaths_per_100k = deaths/race_estimate *100000,
     hosp_per_100k = hosp/race_estimate *100000,
     tests_per_100k = tests/race_estimate *100000
+  ) %>%
+  # Add statewide population to the state racial data
+  right_join(df_pop, by = "state") %>%
+  relocate(
+    state,
+    population,
+    .after = state_abrv
+  ) %>%
+  #Cast the date integer to a date object
+  mutate(
+    date = date %>% as.character() %>% as.Date(format="%Y%m%d")
   )
 
 df_usa <-
@@ -167,13 +181,18 @@ df_usa <-
 
 
 # Get rid of working variables for cleanliness when this file is used as a source
-# remove(list = c(
-#   "df_abbreviations",
-#   "df_pop",
-#   "filename_abbreviations",
-#   "filename_population",
-#   "filename_states_current",
-#   "filename_states_historical",
-#   "url_states_current",
-#   "url_states_historical"
-#   ))
+remove(list = c(
+  "df_abbreviations",
+  "df_pop",
+  "df_pop_racial", 
+  "df_states_racial",
+  "filename_abbreviations",
+  "filename_pop_racial",
+  "filename_population",
+  "filename_states_current",
+  "filename_states_historical",
+  "filename_states_racial",
+  "url_states_current",
+  "url_states_historical",
+  "url_states_racial"
+  ))
