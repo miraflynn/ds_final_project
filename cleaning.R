@@ -122,6 +122,9 @@ df_states_historical <- df_states_historical %>%
     state,
     population,
     .after = state_abbreviation
+  ) %>%
+  mutate(
+    date = date %>% as.character() %>% as.Date(format="%Y%m%d")
   )
 
 df_states_racial_comb <-

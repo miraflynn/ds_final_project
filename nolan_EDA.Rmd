@@ -112,19 +112,19 @@ df_usa %>%
 
 ```{r timeline-cases}
 df_states_historical %>%
-  mutate(date = ymd(date)) %>%
-  group_by(state) %>%
+  # mutate(date = ymd(date)) %>%
+  group_by(state_abbreviation) %>%
   mutate(max_positive = max(positive)) %>%
   ungroup() %>%
   filter(
     ## dense_rank(-max_positive) <= 10,
     ## state %in% c("CA", "NY", "WA", "MA", "HI")
-    state %in% c("TX", "FL", "GA", "SC", "NC", "NY", "MA")
+    state_abbreviation %in% c("TX", "FL", "GA", "SC", "NC", "NY", "MA")
   ) %>%
   ggplot(aes(
     x = date,
     y = positive,
-    color = fct_reorder2(state, date, positive)
+    color = fct_reorder2(state_abbreviation, date, positive)
     ## y = death,
     ## color = fct_reorder2(state, date, death)
   )) +
@@ -139,18 +139,18 @@ df_states_historical %>%
 
 ```{r timeline-cases}
 df_states_historical %>%
-  mutate(date = ymd(date)) %>%
-  group_by(state) %>%
+  # mutate(date = ymd(date)) %>%state_abbreviation
+  group_by(state_abbreviation) %>%
   mutate(max_positive = max(positive)) %>%
   ungroup() %>%
   filter(
     ## dense_rank(-max_positive) <= 10,
-    state %in% c("CA", "NY", "WA", "MA")
+    state_abbreviation %in% c("CA", "NY", "WA", "MA")
   ) %>%
   ggplot(aes(
     x = date,
     y = death,
-    color = fct_reorder2(state, date, death)
+    color = fct_reorder2(state_abbreviation, date, death)
   )) +
   geom_line(size = 1) +
   scale_y_log10() +
@@ -162,18 +162,18 @@ df_states_historical %>%
 
 ```{r vis-cases}
 df_states_historical %>%
-  group_by(state) %>%
+  group_by(state_abbreviation) %>%
   mutate(max_positive = max(positive)) %>%
   ungroup() %>%
   filter(
     positiveIncrease > 0,
     ## dense_rank(-max_positive) <= 10
-    state %in% c("CA", "NY", "WA", "MA")
+    state_abbreviation %in% c("CA", "NY", "WA", "MA")
   ) %>%
   ggplot(aes(
     positive,
     positiveIncrease,
-    color = state
+    color = state_abbreviation
   )) +
   geom_smooth(se = FALSE, size = 2) +
   ## geom_line() +
@@ -185,18 +185,18 @@ df_states_historical %>%
 
 ```{r vis-deaths}
 df_states_historical %>%
-  group_by(state) %>%
+  group_by(state_abbreviation) %>%
   mutate(max_positive = max(positive)) %>%
   ungroup() %>%
   filter(
     positiveIncrease > 0,
     ## dense_rank(-max_positive) <= 10
-    state %in% c("CA", "NY", "WA", "MA")
+    state_abbreviation %in% c("CA", "NY", "WA", "MA")
   ) %>%
   ggplot(aes(
     death,
     deathIncrease,
-    color = state
+    color = state_abbreviation
   )) +
   geom_smooth(se = FALSE, size = 2) +
   ## geom_line() +
@@ -208,18 +208,18 @@ df_states_historical %>%
 
 ```{r vis-tests}
 df_states_historical %>%
-  group_by(state) %>%
+  group_by(state_abbreviation) %>%
   mutate(max_test = max(totalTestResults)) %>%
   ungroup() %>%
   filter(
     totalTestResults > 0,
     ## dense_rank(-max_test) <= 5
-    str_detect(state, "HI")
+    str_detect(state_abbreviation, "HI")
   ) %>%
   ggplot(aes(
     totalTestResults,
     totalTestResultsIncrease,
-    color = state
+    color = state_abbreviation
   )) +
   geom_smooth(se = FALSE, size = 2) +
   geom_line() +
@@ -233,7 +233,7 @@ df_states_historical %>%
 
 ```{r vis-normalized}
 df_states_historical %>%
-  group_by(state) %>%
+  group_by(state_abbreviation) %>%
   mutate(max_positive = max(positive)) %>%
   ungroup() %>%
   filter(
@@ -243,7 +243,7 @@ df_states_historical %>%
   ggplot(aes(
     positive / totalTestResults,
     positiveIncrease / totalTestResults,
-    color = state
+    color = state_abbreviation
   )) +
   geom_smooth(se = FALSE, size = 2) +
   geom_line() +
@@ -251,5 +251,17 @@ df_states_historical %>%
   scale_x_log10() +
   scale_y_log10() +
   theme(legend.position = "bottom")
+```
+
+```{r}
+df_states_historical %>%
+  filter(state == "New York") %>%
+  mutate(
+    positivity_rate = (positiveIncrease/totalTestResultsIncrease),
+    projected_cases = population * positivity_rate
+  ) %>%
+  ggplot() +
+  geom_point(aes(x=date, y=positiveIncrease, color="positive cases increase"))
+  # geom_point(aes(x=date, y=projected_cases, color="population * positivity rate"))
 ```
 
