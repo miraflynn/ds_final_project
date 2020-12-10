@@ -38,18 +38,18 @@ theme_common <- function() {
     )
 }
 
-curl::curl_download(
-  url_states_current,
-  destfile = filename_states_current
-)
-curl::curl_download(
-  url_states_historical,
-  destfile = filename_states_historical
-)
-curl::curl_download(
-  url_states_racial,
-  destfile = filename_states_racial
-)
+# curl::curl_download(
+#   url_states_current,
+#   destfile = filename_states_current
+# )
+# curl::curl_download(
+#   url_states_historical,
+#   destfile = filename_states_historical
+# )
+# curl::curl_download(
+#   url_states_racial,
+#   destfile = filename_states_racial
+# )
 
 
 df_states_current <- read_csv(filename_states_current)
