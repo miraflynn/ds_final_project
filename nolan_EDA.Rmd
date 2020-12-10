@@ -364,11 +364,18 @@ df_states_racial_comb %>%
 df_states_racial_comb %>%
   filter(!is.na(tests_per_100k)) %>%
   filter(tests_per_100k != 0) %>%
+  filter(race_estimate > 10000) %>%
+  group_by(race, state) %>%
+  arrange(date) %>%
+  mutate(
+    delta_tests_per_100k = tests_per_100k - lag(tests_per_100k)
+  ) %>%
   # filter(race != "Other") %>%
-  filter(state == "Rhode Island") %>%
-  # filter(state == "Utah") %>%
+  # filter(state == "Rhode Island") %>%
+  filter(delta_tests_per_100k > 0) %>%
+  filter(state == "Illinois") %>%
   ggplot() +
-  geom_line(aes(x=date, y=tests_per_100k, color=race)) +
+  geom_line(aes(x=date, y=delta_tests_per_100k, color=race)) +
   facet_wrap(~ state, scales = "free_y")
 ```
 
@@ -386,4 +393,25 @@ df_states_racial_comb %>%
 ```
 
 
+```{r}
+df_states_racial_comb %>%
+  filter(!is.na(tests)) %>% 
+  filter(tests > 100) %>%
+  group_by(date, race) %>% 
+  summarise(
+    # deaths_per_cases = sum(deaths)/sum(cases),
+    # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"),
+    tests = sum(tests),
+    race_estimate = sum(race_estimate),
+    .groups = "keep"
+  ) %>% 
+  mutate(
+    tests_per_100k = tests/race_estimate
+  ) %>%
+   # filter(deaths_per_cases < .25) %>% 
+ggplot(aes(x = date, y = tests_per_100k, color = race)) +
+  geom_point(aes(shape = race), size = 1) +
+  geom_line()
+```
 
