@@ -60,7 +60,7 @@ df_states_racial_comb %>%
     .groups = "keep") %>% 
    filter(deaths_per_cases < .8) %>% 
 ggplot(aes(x = date, y = deaths_per_cases, color = race)) +
-  facet_wrap(vars(state)) +
+  facet_wrap(vars(state), scales = "free_y") +
   geom_point(aes(shape = race), size = 1) +
   geom_line()
 
@@ -76,7 +76,7 @@ df_states_racial_comb %>%
     # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
     # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
     .groups = "keep") %>% 
-   filter(hosp_per_cases < .8) %>% 
+   filter(hosp_per_cases < .27) %>% 
 ggplot(aes(x = date, y = hosp_per_cases, color = race)) +
   geom_point(aes(shape = race), size = 1) +
   geom_line()
@@ -91,7 +91,7 @@ df_states_racial_comb %>%
     # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
     # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
     .groups = "keep") %>% 
-   filter(hosp_per_cases < .8) %>% 
+   filter(hosp_per_cases < .27) %>% 
 ggplot(aes(x = date, y = hosp_per_cases, color = race)) +
   facet_wrap(vars(state)) +
   geom_point(aes(shape = race),size = 1) +
