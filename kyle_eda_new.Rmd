@@ -1,0 +1,209 @@
+---
+title: "R Notebook"
+output: github_document
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r setup}
+library(tidyverse)
+source("cleaning.R")
+set.seed(42)
+```
+
+
+```{r}
+df_states_racial_comb
+
+```
+```{r}
+df_states_racial_comb %>%
+  filter(date == "2020-12-06") %>%
+  filter(deaths <= 3000) %>%
+  ggplot(aes(deaths, race_estimate, color = race)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE)
+?geom_smooth
+```
+```{r}
+df_states_racial_comb %>%
+  filter(date == "2020-12-06") %>%
+  filter(cases_per_100k <= 10000000) %>%
+  mutate(race = fct_reorder(race, cases_per_100k)) %>%
+  ggplot() +
+  geom_boxplot((aes(race, cases_per_100k)))
+```
+```{r}
+df_states_racial_comb %>%
+  group_by(date, race) %>%
+  summarise(total_tests = sum(tests, na.rm = TRUE), race_estimate = sum(race_estimate)) %>%
+  mutate(tests_per_100k = total_tests/race_estimate*100000) %>%
+  ggplot() +
+  geom_line(aes(date, tests_per_100k, color = race))
+```
+
+```{r}
+df_states_racial_comb %>%
+  group_by(date, race) %>%
+  summarise(total_cases = sum(cases, na.rm = TRUE), race_estimate = sum(race_estimate)) %>%
+  mutate(cases100k = total_cases/race_estimate*100000) %>%
+  ggplot() +
+  geom_line(aes(date, cases100k, color = race))
+```
+
+
+```{r}
+df_states_racial_comb %>%
+  filter(cases_per_100k <= 50000) %>%
+  mutate(race = fct_reorder(race, cases_per_100k)) %>%
+  ggplot() +
+  geom_boxplot((aes(race, cases_per_100k)))
+```
+
+```{r}
+df_usa %>%
+  ggplot() +
+  geom_line(aes(date, positiveIncrease))+
+  geom_line(aes(date, totalTestResultsIncrease))
+```
+```{r}
+df_states_historical %>%
+  ggplot()+
+  geom_bar(aes(dataQualityGrade))
+```
+
+
+```{r}
+df_states_racial_comb %>%
+  group_by(date,category) %>%
+  summarise()
+  ggplot() +
+  geo
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ```{r}
+# all_ratings %>%
+#   glimpse()
+# ```
+# ```{r}
+# all_ratings %>%
+#   ggplot() +
+#   geom_histogram(aes(altitude_mean_meters))
+# ```
+# 
+# ```{r}
+# all_ratings %>%
+#   group_by(country_of_origin)%>%
+#   mutate(count = n()) %>%
+#   ungroup()%>%
+#   mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
+#   ggplot() +
+#   geom_bar(aes(country_of_origin)) +
+#   coord_flip()
+# ```
+# 
+# 
+# 
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 50) %>%
+#   mutate(variety = fct_reorder(variety, total_cup_points)) %>%
+#   ggplot() +
+#   geom_boxplot(aes(variety, total_cup_points)) +
+#   coord_flip()
+# ```
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 50) %>%
+#   mutate(processing_method = fct_reorder(processing_method, total_cup_points)) %>%
+#   ggplot() +
+#   geom_boxplot(aes(processing_method, total_cup_points)) +
+#   coord_flip()
+# ```
+# 
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 50) %>%
+#   ggplot() +
+#   geom_point(aes(altitude_mean_meters, total_cup_points)) +
+#   coord_flip()
+# ```
+# 
+# 
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 50) %>%
+#   mutate(alt_bins=cut_width(altitude_mean_meters, width=500, boundary=0)) %>%
+#   #mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
+#   ggplot() +
+#   geom_boxplot(aes(alt_bins, total_cup_points)) +
+#   coord_flip()
+# ```
+# ```{r}
+# all_ratings %>%
+#   lm(data = .,
+#     formula = total_cup_points ~ aroma + flavor + aftertaste + acidity + body + balance + uniformity + clean_cup + sweetness
+#     # formula = total_cup_points ~ category_two_defects + category_one_defects
+#   ) %>%
+#   tidy()
+# ```
+# 
+# ```{r}
+# all_ratings %>%
+#   mutate(sum_variables = aroma + flavor + aftertaste + acidity + body + balance + uniformity + clean_cup + sweetness + cupper_points) %>%
+#   select(total_cup_points, sum_variables)
+# ```
+# 
+# ```{r}
+# all_ratings %>%
+#   filter(total_cup_points >= 65) %>%
+#   ggplot() +
+#   geom_point(aes(number_of_bags,total_cup_points)) +
+#   coord_flip()
+# ```
