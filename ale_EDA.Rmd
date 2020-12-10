@@ -16,25 +16,157 @@ set.seed(42)
  
 ```{r vis-usa}
 df_states_racial_comb %>% summary()
-df_states_racial_comb %>% 
-  ggplot()+
-  facet_wrap(race) +
-  ggplot()
   
 
 ```
 
 ```{r}
+# df_states_racial_comb %>%
+#   filter(!is.na(deaths)|!is.na(cases)) %>% 
+#   group_by(date, race) %>% 
+#   summarise(
+#     deaths_per_cases = sum(deaths)/sum(cases),
+#     # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+#     # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+#     .groups = "keep") %>% 
+#   ggplot(aes(x = date, y = deaths_per_cases, color = race)) +
+#   geom_point() +
+#   geom_line()
+
+
 df_states_racial_comb %>%
-  group_by(race) %>% 
+  filter(!is.na(deaths)) %>% 
+  filter(!is.na(cases)) %>% 
+  group_by(date, race) %>% 
   summarise(
-    deaths_per_cases = sum(deaths, na.rm = "TRUE")/sum(cases, na.rm = "TRUE"),
-    hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
-    deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
-    groups = "TRUE") %>% 
-  ggplot(aes(x = race)) +
-  geom_col(aes(y = deaths_per_cases))
+    deaths_per_cases = sum(deaths)/sum(cases),
+    # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+    .groups = "keep") %>% 
+   filter(deaths_per_cases < .25) %>% 
+ggplot(aes(x = date, y = deaths_per_cases, color = race)) +
+  geom_point(size = 1) +
+  geom_line()
+
+df_states_racial_comb %>%
+  filter(!is.na(hosp)) %>% 
+  filter(!is.na(cases)) %>% 
+  #filter(state == "Washington") %>% 
+  group_by(date, race,state) %>% 
+  summarise(
+    deaths_per_cases = sum(deaths)/sum(cases),
+    # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+    .groups = "keep") %>% 
+   filter(deaths_per_cases < .8) %>% 
+ggplot(aes(x = date, y = deaths_per_cases, color = race)) +
+  facet_wrap(vars(state)) +
+  geom_point(size = 1) +
+  geom_line()
+
+
+
+df_states_racial_comb %>%
+  filter(!is.na(hosp)) %>% 
+  filter(!is.na(cases)) %>% 
+  #filter(state == "Washington") %>% 
+  group_by(date, race) %>% 
+  summarise(
+    hosp_per_cases = sum(hosp)/sum(cases),
+    # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+    .groups = "keep") %>% 
+   filter(hosp_per_cases < .8) %>% 
+ggplot(aes(x = date, y = hosp_per_cases, color = race)) +
+  geom_point(size = 1) +
+  geom_line()
+
+df_states_racial_comb %>%
+  filter(!is.na(hosp)) %>% 
+  filter(!is.na(cases)) %>% 
+  #filter(state == "Alaska") %>% 
+  group_by(date, race, state) %>% 
+  summarise(
+    hosp_per_cases = sum(hosp)/sum(cases),
+    # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+    .groups = "keep") %>% 
+   filter(hosp_per_cases < .8) %>% 
+ggplot(aes(x = date, y = hosp_per_cases, color = race)) +
+  facet_wrap(vars(state)) +
+  geom_point(size = 1) +
+  geom_line()
+
+df_states_racial_comb %>%
+  filter(!is.na(hosp)) %>% 
+  filter(!is.na(cases)) %>% 
+  filter(state == "Washington") %>% 
+  group_by(date, race) %>% 
+  summarise(
+    hosp_per_cases = sum(hosp)/sum(cases),
+    # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+    .groups = "keep") %>% 
+   filter(hosp_per_cases < .8) %>% 
+ggplot(aes(x = date, y = hosp_per_cases, color = race)) +
+  geom_point(size = 1) +
+  geom_line()
+
+# df_states_racial_comb %>%
+#   filter(is.na(deaths)) %>% 
+#   group_by(race)%>% 
+#   summarise(
+#     deaths_per_cases = sum(deaths, na.rm = "TRUE")/sum(cases, na.rm = "TRUE"),
+#     hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+#     deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+#     groups = "TRUE") %>% 
+#   ggplot(aes(x = race)) +
+#   geom_col(aes(y = hosp_per_cases))
+
+
+# df_states_racial_comb %>%
+#   filter(!is.na(deaths)|!is.na(cases)) %>%
+#   group_by(date, race, state) %>%
+#   summarise(
+#     deaths_per_cases = sum(deaths, na.rm = "TRUE")/sum(cases, na.rm = "TRUE"),
+#     # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+#     # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"),
+#     .groups = "keep")  %>%
+#   filter(deaths_per_cases < .2)
+#   ggplot(aes(x = date)) +
+#   facet_grid = (vars(state)) +
+#   geom_point(aes(y = hosp_per_cases, color = race))
 ```
+```{r}
+df_states_racial_comb %>%
+  group_by(date, race, state)%>% 
+  summarise(
+    deaths_per_cases = deaths/cases,
+    hosp_per_cases = hosp/cases,
+    deaths_per_hosp = deaths/hosp, 
+    .groups = "keep") 
+
+  # ggplot(aes(x = date, y = deaths_per_cases, color = race)) +
+  # geom_line() +
+  # facet_wrap("state")
+
+
+df_states_racial_comb %>%
+  filter(is.na(deaths)|is.na(cases)|is.na(hosp)) %>% 
+    group_by(date, race, state)%>% 
+  summarise(
+    deaths_per_cases = deaths/cases,
+    hosp_per_cases = hosp/cases,
+    deaths_per_hosp = deaths/hosp, 
+    .groups = "keep") 
+  # group_by(date, race, state)%>% 
+  # summarise(
+  #   deaths_per_cases = sum(deaths, na.rm = "TRUE")/sum(cases, na.rm = "TRUE"),
+  #   hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+  #   deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+  #   .groups = "keep")
+```
+
 
 
 
