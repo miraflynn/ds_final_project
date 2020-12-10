@@ -183,8 +183,7 @@ df_usa <-
 remove(list = c(
   "df_abbreviations",
   "df_pop",
-  "df_pop_racial", 
-  "df_states_racial",
+  "df_pop_racial",
   "filename_abbreviations",
   "filename_pop_racial",
   "filename_population",
