@@ -10,6 +10,7 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r setup}
 library(tidyverse)
 library(modelr)
+library(runner)
 source("cleaning.R")
 set.seed(42)
 ```
@@ -262,6 +263,127 @@ df_states_historical %>%
   ) %>%
   ggplot() +
   geom_point(aes(x=date, y=positiveIncrease, color="positive cases increase"))
-  # geom_point(aes(x=date, y=projected_cases, color="population * positivity rate"))
 ```
+
+
+```{r}
+df_states_historical %>%
+  filter(state == "New York") %>%
+  mutate(
+    positivity_rate = (positiveIncrease/totalTestResultsIncrease),
+    projected_cases = population * positivity_rate
+  ) %>%
+  ggplot() +
+  geom_point(aes(x=date, y=positiveIncrease, color="positiveIncrease")) +
+  geom_point(aes(x=date, y=projected_cases, color="population * positivity rate")) +
+  geom_line(aes(x=date, y=population, color="NY Total Population"))
+```
+
+```{r}
+df_states_historical %>%
+  filter(state == "New York") %>%
+  mutate(
+    positivity_rate = (positiveIncrease/totalTestResultsIncrease),
+    projected_cases = population * positivity_rate
+  ) %>%
+  ggplot() +
+  geom_point(aes(x=date, y=positivity_rate, color="positivity rate"))
+```
+
+```{r}
+df_states_racial_comb %>%
+  filter(state == "California") %>%
+  left_join(df_states_historical) %>%
+  ggplot() +
+  geom_line(aes(x=date, y=cases/positive, color=race))
+```
+
+```{r}
+df_states_racial_comb %>%
+  filter(state == "California") %>%
+  left_join(df_states_historical) %>%
+  ggplot() +
+  geom_line(aes(x=date, y=cases_per_100k, color=race))
+```
+
+
+```{r}
+foo <- df_states_racial_comb %>%
+  filter(!is.na(date)) %>%
+  arrange(date) %>%
+  group_by(race, state) %>%
+  mutate(
+    rolling7dayavg_cases = mean_run(x = cases, k = 8, idx = date)
+  ) %>%
+  relocate(
+    rolling7dayavg_cases,
+    .after = cases
+  ) %>%
+  filter(state=="California",race=="White")
+
+foo %>%
+  ggplot() +
+  geom_point(aes(x=date,y=cases,color="cases")) +
+  geom_point(aes(x=date,y=rolling7dayavg_cases, color="rolling 7 day"))
+
+```
+
+```{r}
+cases_model <- glm(
+    formula = cases_per_100k ~ date + race + race_estimate,
+    data = df_states_racial_comb %>%
+      mutate(
+        race = race %>% as.factor(),
+        race = fct_relevel(race, "White"),
+        cases_per_100k = cases_per_100k/max(cases_per_100k, na.rm = TRUE),
+        race_estimate = race_estimate/max(race_estimate, na.rm = TRUE)
+      ) %>%
+      filter(
+        !is.na(cases_per_100k),
+      ),
+    family = "binomial"
+  )
+cases_model %>% generics::tidy()
+```
+
+
+
+
+```{r}
+df_states_racial_comb %>%
+  filter(!is.na(tests_per_100k)) %>%
+  filter(tests_per_100k != 0) %>%
+  filter(race != "Other") %>%
+  filter(race_estimate > 10000) %>%
+  ggplot() +
+  geom_line(aes(x=date, y=tests_per_100k, color=race)) +
+  facet_wrap(~ state, scales = "free_y")
+```
+
+```{r}
+df_states_racial_comb %>%
+  filter(!is.na(tests_per_100k)) %>%
+  filter(tests_per_100k != 0) %>%
+  # filter(race != "Other") %>%
+  filter(state == "Rhode Island") %>%
+  # filter(state == "Utah") %>%
+  ggplot() +
+  geom_line(aes(x=date, y=tests_per_100k, color=race)) +
+  facet_wrap(~ state, scales = "free_y")
+```
+
+
+
+```{r}
+df_states_racial_comb %>%
+  filter(!is.na(tests_per_100k)) %>%
+  filter(tests_per_100k != 0) %>%
+  filter(race != "Other") %>%
+  filter(race_estimate > 10000) %>%
+  ggplot() +
+  geom_boxplot(aes(x=race, y=tests_per_100k, color=race)) +
+  facet_wrap(~ state, scales = "free_y")
+```
+
+
 
