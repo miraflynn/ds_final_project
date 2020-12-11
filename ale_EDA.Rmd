@@ -16,17 +16,37 @@ set.seed(42)
  
 ```{r vis-usa}
 df_states_racial_comb %>% summary()
-df_states_racial_comb %>% 
-  ggplot()+
-  facet_wrap(race) +
-  ggplot()
   
 
 ```
 
 ```{r}
 df_states_racial_comb %>%
-  group_by(race) %>% 
+  mutate(
+    
+  )
+  
+```
+
+
+```{r}
+df_states_racial_comb %>%
+  filter(!is.na(deaths)) %>% 
+  filter(!is.na(cases)) %>% 
+  group_by(date, race) %>% 
+  summarise(
+    deaths_per_cases = sum(deaths)/sum(cases),
+    # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+    .groups = "keep") %>% 
+   filter(deaths_per_cases < .3) %>% 
+ggplot(aes(x = date, y = deaths_per_cases, color = race)) +
+  geom_point(aes(shape = race), size = 1) +
+  geom_line()
+
+
+df_states_racial_comb %>%
+  group_by(date, race, state) %>% 
   summarise(
     deaths_per_cases = sum(deaths)/sum(cases),
     # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
