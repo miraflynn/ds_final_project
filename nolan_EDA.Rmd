@@ -10,6 +10,7 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r setup}
 library(tidyverse)
 library(modelr)
+library(runner)
 source("cleaning.R")
 set.seed(42)
 ```
@@ -352,9 +353,9 @@ cases_model %>% generics::tidy()
 ```{r}
 df_states_racial_comb %>%
   filter(!is.na(tests_per_100k)) %>%
-  filter(tests_per_100k != 0) %>%
-  filter(race != "Other") %>%
-  filter(race_estimate > 10000) %>%
+  # filter(tests_per_100k != 0) %>%
+  # filter(race != "Other") %>%
+  # filter(race_estimate > 10000) %>%
   ggplot() +
   geom_line(aes(x=date, y=tests_per_100k, color=race)) +
   facet_wrap(~ state, scales = "free_y")
@@ -414,3 +415,170 @@ ggplot(aes(x = date, y = tests_per_100k, color = race)) +
   geom_point(aes(shape = race), size = 1) +
   geom_line()
 ```
+
+
+```{r}
+df_states_racial_comb %>%
+  group_by(date, state) %>%
+  mutate(
+    sum_tests = sum(tests),
+    fraction_tests = tests/sum_tests
+  ) %>%
+  filter(!is.na(sum_tests)) %>%
+  ggplot() +
+  geom_line(aes(x=date,y=fraction_tests,color=race)) +
+  facet_wrap(~ state) +
+  theme_common() +
+  theme(
+    aspect.ratio = 9 / 16
+  )
+```
+
+```{r}
+# df_states_racial_comb %>%
+#   filter(
+#     # race_estimate > 5000, 
+#     # race != "Other",
+#     # tests_per_100k > 1000
+#   ) %>%
+#   group_by(race, state) %>%
+#   arrange(date) %>%
+#   mutate(
+#     delta_tests_per_100k = tests_per_100k - lag(tests_per_100k)
+#   ) %>%
+#   ungroup() %>%
+#   group_by(date, state) %>%
+#   mutate(
+#     mean_dtests_per_100k = mean(delta_tests_per_100k, na.rm = TRUE),
+#     diff_per100k_frommean = tests_per_100k - mean_dtests_per_100k
+#   ) %>%
+#   filter(!is.na(diff_per100k_frommean)) %>%
+#   # group_modify(
+#   #   #add_row(date = .$date, state = .$state, race = "Mean", diff_per100k_frommean = 1)
+#   #   ~ {.x %>% add_row(race = "Mean", diff_per100k_frommean = 1) }
+#   # ) %>%
+#   ggplot() +
+#   geom_line(aes(x=date,y=diff_per100k_frommean,color=race)) +
+#   facet_wrap(~ state) +
+#   theme_common() +
+#   theme(
+#     aspect.ratio = 9 / 16
+#   )
+```
+
+
+```{r}
+
+df_states_racial_comb %>%
+  filter(!is.na(tests)) %>%
+  filter(race_estimate > 5000) %>%
+  filter(race != "Other") %>%
+  filter(state != "Utah" & state != "Rhode Island") %>%
+  group_by(date, state) %>%
+  mutate(
+    tot_tests = sum(tests, na.rm = TRUE),
+    tot_tested_pop = sum(race_estimate, na.rm = TRUE)
+  ) %>%
+  group_by(date, state, race) %>%
+  mutate(
+    test_frac = tests/tot_tests,
+    pop_frac = race_estimate/tot_tested_pop,
+    tests_to_pop_ratio = test_frac / pop_frac
+  ) %>%
+  filter(tests_to_pop_ratio != 0) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_line(aes(x = date, y = tests_to_pop_ratio, color = race)) +
+  facet_wrap(~ state)
+```
+
+
+```{r}
+df_states_racial_comb %>%
+  filter(!is.na(tests)) %>%
+  filter(tests != 0) %>%
+  group_by(race, state) %>%
+  arrange(date) %>%
+  mutate(
+    delta_tests_instant = tests - lag(tests),
+    delta_tests_avg = mean_run(x = tests, k = 8, idx = date),
+    delta_tests = delta_tests_avg
+  ) %>%
+  filter(delta_tests > 0) %>%
+  filter(race_estimate > 5000) %>%
+  filter(race != "Other") %>%
+  filter(state != "Utah" & state != "Rhode Island") %>%
+  group_by(date, state) %>%
+  mutate(
+    tot_dtests = sum(delta_tests, na.rm = TRUE),
+    tot_tested_pop = sum(race_estimate, na.rm = TRUE)
+  ) %>%
+  group_by(date, state, race) %>%
+  mutate(
+    dtest_frac = delta_tests/tot_dtests,
+    pop_frac = race_estimate/tot_tested_pop,
+    tests_to_pop_ratio = dtest_frac / pop_frac
+  ) %>%
+  filter(tests_to_pop_ratio != 0) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_line(aes(x = date, y = tests_to_pop_ratio, color = race)) +
+  facet_wrap(~ state, scales = "free_y")
+
+
+```
+
+
+```{r}
+df_states_racial_comb %>%
+  filter(!is.na(tests)) %>%
+  filter(tests != 0) %>%
+  group_by(race, state) %>%
+  arrange(date) %>%
+  mutate(
+    delta_tests_inst = tests - lag(tests),
+    delta_tests_avg = mean_run(x = tests, k = 8, idx = date)
+  ) %>%
+  filter(delta_tests_inst > 0, delta_tests_avg > 0) %>%
+  filter(race_estimate > 5000) %>%
+  filter(race != "Other") %>%
+  filter(state != "Utah" & state != "Rhode Island") %>%
+  group_by(date, state) %>%
+  mutate(
+    tot_dtests_avg = sum(delta_tests_avg, na.rm = TRUE),
+    tot_dtests_inst = sum(delta_tests_inst, na.rm = TRUE),
+    tot_tested_pop = sum(race_estimate, na.rm = TRUE)
+  ) %>%
+  group_by(date, state, race) %>%
+  mutate(
+    dtest_frac_avg = delta_tests_avg/tot_dtests_avg,
+    dtest_frac_inst = delta_tests_inst/tot_dtests_inst,
+    pop_frac = race_estimate/tot_tested_pop,
+    tests_to_pop_ratio_avg = dtest_frac_avg / pop_frac,
+    tests_to_pop_ratio_inst = dtest_frac_inst / pop_frac
+  ) %>%
+  filter(tests_to_pop_ratio_avg != 0, tests_to_pop_ratio_inst != 0) %>%
+  ungroup() %>%
+  pivot_longer(
+    cols = c(tests_to_pop_ratio_avg, tests_to_pop_ratio_inst),
+    names_to = "avg_or_inst",
+    values_to = "tests_to_pop_ratio"
+  ) %>%
+  mutate(
+    avg_or_inst = ifelse(avg_or_inst == "tests_to_pop_ratio_avg", "avg", "inst")
+  ) %>%
+  ggplot() +
+  geom_line(aes(x = date, y = tests_to_pop_ratio, color = race, alpha = avg_or_inst, size = avg_or_inst)) +
+  scale_alpha_manual(values = c("inst" = 0.2, "avg" = 1)) +
+  scale_size_manual(values = c("inst" = 0.5, "avg" = 1)) +
+  facet_wrap(~ state) +
+  coord_cartesian(ylim = c(0,3)) +
+  theme_common() +
+  theme(
+    aspect.ratio = 9 / 16
+  )
+
+
+```
+
+
