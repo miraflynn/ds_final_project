@@ -9,6 +9,7 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 
 ```{r setup}
 library(tidyverse)
+library(runner)
 source("cleaning.R")
 set.seed(42)
 ```
@@ -74,6 +75,77 @@ df_states_racial_non_pivot %>%
   ggplot()+
   geom_line(aes(Date, test_rpt, color = State))
 ```
+
+
+
+##### Death Rate Rolling Average ###
+
+```{r}
+df_states_racial_comb %>%
+  filter(!is.na(deaths)) %>%
+  filter(!is.na(cases)) %>%
+  filter(!is.na(date)) %>%
+  arrange(date) %>%
+  group_by(race, state) %>%
+  mutate(
+    delta_cases_inst = cases - lag(cases),
+    delta_deaths_inst = deaths - lag(deaths),
+    rolling7dayavg_cases = mean_run(x = delta_cases_inst, k = 60, idx = date),
+    rolling7dayavg_deaths = mean_run(x = delta_deaths_inst, k = 60, idx = date)
+  ) %>%
+  select(date, state, race, rolling7dayavg_cases, rolling7dayavg_deaths) %>%
+  filter(!is.na(rolling7dayavg_cases) |
+         !is.na(rolling7dayavg_deaths) 
+           )%>%
+  # filter(state == "Massachusetts") %>%
+  group_by(date, race) %>%
+  summarise(rolling7dayavg_cases = sum(rolling7dayavg_cases), rolling7dayavg_deaths = sum(rolling7dayavg_deaths))%>%
+  mutate(death_rate = rolling7dayavg_deaths/rolling7dayavg_cases) %>%
+  filter(death_rate <= .3 & death_rate >= -0.3) %>%
+  ggplot() +
+  geom_line(aes(x = date, y = death_rate, color = race))#+
+ # geom_line(aes(x = date, y = rolling7dayavg_cases, color = race))
+```
+
+
+
+
+
+
+
+#### Death Rate By Time in Pandemic ###
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -150,128 +222,3 @@ df_states_racial_comb %>%
   ggplot() +
   geo
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ```{r}
-# all_ratings %>%
-#   glimpse()
-# ```
-# ```{r}
-# all_ratings %>%
-#   ggplot() +
-#   geom_histogram(aes(altitude_mean_meters))
-# ```
-# 
-# ```{r}
-# all_ratings %>%
-#   group_by(country_of_origin)%>%
-#   mutate(count = n()) %>%
-#   ungroup()%>%
-#   mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
-#   ggplot() +
-#   geom_bar(aes(country_of_origin)) +
-#   coord_flip()
-# ```
-# 
-# 
-# 
-# ```{r}
-# all_ratings %>%
-#   filter(total_cup_points >= 50) %>%
-#   mutate(variety = fct_reorder(variety, total_cup_points)) %>%
-#   ggplot() +
-#   geom_boxplot(aes(variety, total_cup_points)) +
-#   coord_flip()
-# ```
-# ```{r}
-# all_ratings %>%
-#   filter(total_cup_points >= 50) %>%
-#   mutate(processing_method = fct_reorder(processing_method, total_cup_points)) %>%
-#   ggplot() +
-#   geom_boxplot(aes(processing_method, total_cup_points)) +
-#   coord_flip()
-# ```
-# 
-# ```{r}
-# all_ratings %>%
-#   filter(total_cup_points >= 50) %>%
-#   ggplot() +
-#   geom_point(aes(altitude_mean_meters, total_cup_points)) +
-#   coord_flip()
-# ```
-# 
-# 
-# ```{r}
-# all_ratings %>%
-#   filter(total_cup_points >= 50) %>%
-#   mutate(alt_bins=cut_width(altitude_mean_meters, width=500, boundary=0)) %>%
-#   #mutate(country_of_origin = fct_reorder(country_of_origin, count)) %>%
-#   ggplot() +
-#   geom_boxplot(aes(alt_bins, total_cup_points)) +
-#   coord_flip()
-# ```
-# ```{r}
-# all_ratings %>%
-#   lm(data = .,
-#     formula = total_cup_points ~ aroma + flavor + aftertaste + acidity + body + balance + uniformity + clean_cup + sweetness
-#     # formula = total_cup_points ~ category_two_defects + category_one_defects
-#   ) %>%
-#   tidy()
-# ```
-# 
-# ```{r}
-# all_ratings %>%
-#   mutate(sum_variables = aroma + flavor + aftertaste + acidity + body + balance + uniformity + clean_cup + sweetness + cupper_points) %>%
-#   select(total_cup_points, sum_variables)
-# ```
-# 
-# ```{r}
-# all_ratings %>%
-#   filter(total_cup_points >= 65) %>%
-#   ggplot() +
-#   geom_point(aes(number_of_bags,total_cup_points)) +
-#   coord_flip()
-# ```
