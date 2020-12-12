@@ -13,11 +13,79 @@ source("cleaning.R")
 set.seed(42)
 ```
 
+```{r}
+df_states_racial_non_pivot
+```
+
+
+
+
+
+```{r}
+df_states_racial_non_pivot %>%
+  group_by(Date)%>%
+  summarise(Cases_Total = sum(Cases_Total, na.rm = TRUE), Cases_Unknown = sum(Cases_Unknown, na.rm = TRUE)) %>%
+  mutate(case_rpt = (Cases_Total-Cases_Unknown)/Cases_Total) %>%
+  select(Date, case_rpt) %>%
+  ggplot() +
+  geom_line(aes(Date, case_rpt))
+```
+
+
+```{r tests}
+df_states_racial_non_pivot %>%
+  group_by(Date)%>%
+  summarise(
+    Tests_Total = sum(Tests_Total, na.rm = TRUE), 
+    Tests_Unknown = sum(Tests_Unknown, na.rm = TRUE),
+    Deaths_Total = sum(Deaths_Total, na.rm = TRUE), 
+    Deaths_Unknown = sum(Deaths_Unknown, na.rm = TRUE)
+    ) %>%
+  mutate(test_rpt = (Tests_Total-Tests_Unknown)/Tests_Total) %>%
+  select(Date, test_rpt) %>%
+  ggplot() +
+  geom_line(aes(Date, test_rpt))
+```
+```{r}
+df_states_racial_non_pivot %>%
+  group_by(Date)%>%
+  summarise(
+    Tests_Total = sum(Tests_Total, na.rm = TRUE), 
+    Tests_Unknown = sum(Tests_Unknown, na.rm = TRUE),
+    Deaths_Total = sum(Deaths_Total, na.rm = TRUE), 
+    Deaths_Unknown = sum(Deaths_Unknown, na.rm = TRUE)
+    ) %>%
+  mutate(death_rpt = (Deaths_Total-Deaths_Unknown)/Deaths_Total) %>%
+  select(Date, death_rpt) %>%
+  ggplot() +
+  geom_line(aes(Date, death_rpt))
+```
+
+```{r}
+df_states_racial_non_pivot %>%
+  mutate(
+    case_rpt = (Cases_Total-Cases_Unknown)/Cases_Total,
+    test_rpt = (Tests_Total-Tests_Unknown)/Tests_Total) %>%
+  select(Date, State, case_rpt, test_rpt) %>%
+  # group_by(Date)%>%
+  # summarise(Cases_Total = sum(Cases_Total, na.rm = TRUE), Cases_Unknown = sum(Cases_Unknown, na.rm = TRUE)) %>%
+  filter(test_rpt != 0) %>%
+  filter(State != "RI" & State != "NV") %>%
+  ggplot()+
+  geom_line(aes(Date, test_rpt, color = State))
+```
+
+
+
+
+
 
 ```{r}
 df_states_racial_comb
 
 ```
+
+
 ```{r}
 df_states_racial_comb %>%
   filter(date == "2020-12-06") %>%
