@@ -352,13 +352,18 @@ cases_model %>% generics::tidy()
 
 ```{r}
 df_states_racial_comb %>%
-  filter(!is.na(tests_per_100k)) %>%
-  # filter(tests_per_100k != 0) %>%
-  # filter(race != "Other") %>%
-  # filter(race_estimate > 10000) %>%
+  filter(!is.na(tests)) %>%
+  filter(tests != 0) %>%
+  filter(race != "Other") %>%
+  filter(race_estimate > 10000) %>%
+  group_by(date,state) %>%
+  summarize(
+    tot_tests = sum(tests, na.rm = TRUE)
+  ) %>%
   ggplot() +
-  geom_line(aes(x=date, y=tests_per_100k, color=race)) +
+  geom_line(aes(x=date, y=tot_tests)) +
   facet_wrap(~ state, scales = "free_y")
+  # scale_y_log10()
 ```
 
 ```{r}
@@ -371,7 +376,7 @@ df_states_racial_comb %>%
   mutate(
     delta_tests_per_100k = tests_per_100k - lag(tests_per_100k)
   ) %>%
-  # filter(race != "Other") %>%
+  filter(race != "Other") %>%
   # filter(state == "Rhode Island") %>%
   filter(delta_tests_per_100k > 0) %>%
   filter(state == "Illinois") %>%
@@ -532,23 +537,34 @@ df_states_racial_comb %>%
 ```{r}
 df_states_racial_comb %>%
   filter(!is.na(tests)) %>%
-  filter(tests != 0) %>%
+  filter(tests > 0) %>%
   group_by(race, state) %>%
   arrange(date) %>%
   mutate(
-    delta_tests_inst = tests - lag(tests),
-    delta_tests_avg = mean_run(x = tests, k = 8, idx = date)
+    delta_tests_inst = tests - lag(tests)
   ) %>%
-  filter(delta_tests_inst > 0, delta_tests_avg > 0) %>%
+  ungroup() %>%
+  group_by(state, date) %>%
+  # filter(all(delta_tests_inst >= 0)) %>%
+  ungroup() %>%
+  group_by(race, state) %>%
+  mutate(
+    delta_tests_avg = mean_run(x = delta_tests_inst, k = 15, idx = date)
+  ) %>%
+  # filter(delta_tests_inst > 0, delta_tests_avg > 0) %>%
   filter(race_estimate > 5000) %>%
-  filter(race != "Other") %>%
-  filter(state != "Utah" & state != "Rhode Island") %>%
+  filter(race != "Other" & race != "Multiracial" & race != "Unknown") %>%
+  # filter(state != "Utah") %>%
+  # filter(state != "Rhode Island") %>%
   group_by(date, state) %>%
   mutate(
     tot_dtests_avg = sum(delta_tests_avg, na.rm = TRUE),
     tot_dtests_inst = sum(delta_tests_inst, na.rm = TRUE),
     tot_tested_pop = sum(race_estimate, na.rm = TRUE)
   ) %>%
+  # filter(tot_dtests_avg > 1000 & tot_dtests_inst > 1000) %>%
+  # filter(tot_dtests_avg != tot_dtests_inst) %>%
+  # filter((abs(delta_tests_inst) / delta_tests_avg) < 2) %>%
   group_by(date, state, race) %>%
   mutate(
     dtest_frac_avg = delta_tests_avg/tot_dtests_avg,
@@ -557,7 +573,7 @@ df_states_racial_comb %>%
     tests_to_pop_ratio_avg = dtest_frac_avg / pop_frac,
     tests_to_pop_ratio_inst = dtest_frac_inst / pop_frac
   ) %>%
-  filter(tests_to_pop_ratio_avg != 0, tests_to_pop_ratio_inst != 0) %>%
+  # filter(tests_to_pop_ratio_avg != 0, tests_to_pop_ratio_inst != 0) %>%
   ungroup() %>%
   pivot_longer(
     cols = c(tests_to_pop_ratio_avg, tests_to_pop_ratio_inst),
@@ -565,20 +581,28 @@ df_states_racial_comb %>%
     values_to = "tests_to_pop_ratio"
   ) %>%
   mutate(
-    avg_or_inst = ifelse(avg_or_inst == "tests_to_pop_ratio_avg", "avg", "inst")
+    avg_or_inst = ifelse(avg_or_inst == "tests_to_pop_ratio_avg", "15 Day Rolling Average", "Instantaneous")
   ) %>%
   ggplot() +
   geom_line(aes(x = date, y = tests_to_pop_ratio, color = race, alpha = avg_or_inst, size = avg_or_inst)) +
-  scale_alpha_manual(values = c("inst" = 0.2, "avg" = 1)) +
-  scale_size_manual(values = c("inst" = 0.5, "avg" = 1)) +
+  scale_alpha_manual(values = c("Instantaneous" = 0.2, "15 Day Rolling Average" = 1)) +
+  scale_size_manual(values = c("Instantaneous" = 0.5, "15 Day Rolling Average" = 1)) +
   facet_wrap(~ state) +
   coord_cartesian(ylim = c(0,3)) +
   theme_common() +
   theme(
-    aspect.ratio = 9 / 16
+    # aspect.ratio = 9 / 16,
+    legend.title = element_text(size = 12, face = "bold"),
+    axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12, face = "bold"),
+      axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 12, angle = 90, face = "bold"),
+  ) +
+  labs(
+    x = "Date",
+    y = "Race Test Percent to Race Population Percent",
+    alpha = "Average or Instantaneous",
+    size = "Average or Instantaneous",
+    color = "Race"
   )
 
 
 ```
-
-

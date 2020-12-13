@@ -63,43 +63,50 @@ df_pop <- read_csv(filename_population, skip = 1) %>%
   )
     
 df_states_racial <- read_csv(filename_states_racial) %>%
+  pivot_longer(cols = c(-"Date",-"State")) %>%
+  filter(
+    !str_detect(name, pattern = "Ethnicity") & !str_detect(name, pattern = "Total")
+  ) %>%
+  pivot_wider() %>%
   pivot_longer(
-    names_to = c(".value","race"),
+    names_to = c(".value","race",NA),
     names_sep = "_",
     cols = c(-"Date",-"State")
   )
 
-df_states_racial_non_pivot <- read_csv(filename_states_racial)
+# df_states_racial_non_pivot <- read_csv(filename_states_racial)
 
 
-df_pop_racial <- read_csv(filename_pop_racial, skip = 1,col_types = cols(.default = col_character())) %>%
-  pivot_longer(
-    names_to = c(".value","x1", "category","division"),
-    names_sep = "!!",
-    cols = c(-"id",-"Geographic Area Name")
-    ) %>%
-  select(-id, -x1) %>%
-  rename(
-    state = "Geographic Area Name",
-    race_estimate = "Estimate",
-    race_moe = "Margin of Error"
-    ) %>%
-  mutate(
-    race_estimate = as.double(race_estimate),
-    race_moe = as.double(race_moe)
-    ) %>%
-  filter(is.na(division)) %>%
-  select(-division) %>%
-  filter(!is.na(category)) %>%
-  mutate(
-    category = if_else(category == "White alone", "White", category),
-    category = if_else(category == "Black or African American alone", "Black", category),
-    category = if_else(category == "American Indian and Alaska Native alone", "AIAN", category),
-    category = if_else(category == "Asian alone", "Asian", category),
-    category = if_else(category == "Native Hawaiian and Other Pacific Islander alone", "NHPI", category),
-    category = if_else(category == "Two or more races", "Multiracial", category),
-    category = if_else(category == "Some other race alone", "Other", category),
-  )
+# df_pop_racial <- read_csv(filename_pop_racial, skip = 1,col_types = cols(.default = col_character())) %>%
+#   pivot_longer(
+#     names_to = c(".value","x1", "category","division"),
+#     names_sep = "!!",
+#     cols = c(-"id",-"Geographic Area Name")
+#     ) %>%
+#   select(-id, -x1) %>%
+#   rename(
+#     state = "Geographic Area Name",
+#     race_estimate = "Estimate",
+#     race_moe = "Margin of Error"
+#     ) %>%
+#   mutate(
+#     race_estimate = as.double(race_estimate),
+#     race_moe = as.double(race_moe)
+#     ) %>%
+#   filter(is.na(division)) %>%
+#   select(-division) %>%
+#   filter(!is.na(category)) %>%
+#   mutate(
+#     category = if_else(category == "White alone", "White", category),
+#     category = if_else(category == "Black or African American alone", "Black", category),
+#     category = if_else(category == "American Indian and Alaska Native alone", "AIAN", category),
+#     category = if_else(category == "Asian alone", "Asian", category),
+#     category = if_else(category == "Native Hawaiian and Other Pacific Islander alone", "NHPI", category),
+#     category = if_else(category == "Two or more races", "Multiracial", category),
+#     category = if_else(category == "Some other race alone", "Other", category),
+#   )
+
+df_pop_racial <- readRDS(file = "data/racial_pop_with_hispanic.Rds")
 
 
 
@@ -131,32 +138,45 @@ df_states_historical <- df_states_historical %>%
 
 df_states_racial_comb <-
   df_states_racial %>%
-  filter(race != "Total") %>%
-  left_join(df_abbreviations, by = c("State" = "state_abbreviation")) %>%
-  left_join(df_pop_racial) %>%
-  filter(race == category) %>%
-  select(-category) %>%
-  select(Date, State, state, race, everything()) %>%
+  # Change state to state_abbreviation, put it at the front, and don't keep the state value
+  mutate( 
+    state_abbreviation = State,
+    .after = Date,
+    .keep = "unused"
+  ) %>%
+  # Join in the state names from df_abbreviations
+  left_join(df_abbreviations) %>%
+  # Organize columns- not necessary, but nice
+  relocate(
+    state,
+    .after = state_abbreviation
+  ) %>%
+  # Add in population data
+  right_join(df_pop, by = "state") %>%
+  # Organize columns- not necessary, but nice
+  relocate(
+    state,
+    population,
+    .after = state_abbreviation
+  ) %>%
+  left_join(df_pop_racial, by = c("state" = "NAME", "race" = "variable")) %>%
+  # filter(race == category) %>%
+  # select(-category) %>%
+  # select(Date, State, state, race, everything()) %>%
   rename(
     date = "Date",
-    state_abrv = "State",
+    state_abrv = "state_abbreviation",
     cases = "Cases",
     deaths = "Deaths",
     hosp = "Hosp",
-    tests = "Tests"
+    tests = "Tests",
+    race_estimate = "estimate"
   ) %>%
   mutate(
     cases_per_100k = cases/race_estimate *100000,
     deaths_per_100k = deaths/race_estimate *100000,
     hosp_per_100k = hosp/race_estimate *100000,
     tests_per_100k = tests/race_estimate *100000
-  ) %>%
-  # Add statewide population to the state racial data
-  right_join(df_pop, by = "state") %>%
-  relocate(
-    state,
-    population,
-    .after = state_abrv
   ) %>%
   #Cast the date integer to a date object
   mutate(
@@ -186,6 +206,7 @@ remove(list = c(
   "df_abbreviations",
   "df_pop",
   "df_pop_racial",
+  'df_states_racial',
   "filename_abbreviations",
   "filename_pop_racial",
   "filename_population",
