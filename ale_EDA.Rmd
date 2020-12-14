@@ -22,7 +22,19 @@ df_states_racial_comb %>% summary()
 ```
 
 ```{r}
-# df_states_racial_comb %>%
+df_states_racial_comb %>%
+  group_by(date) %>% 
+  filter(date == max(date)) %>% 
+  filter_all(~!is.na(.)) %>% 
+  group_by(race) %>%
+  summarise(
+    cases = sum(cases),
+    deaths = sum(deaths), 
+    hosp = sum(hosp),
+    deaths_per_cases = deaths/cases,
+    hosp_per_cases = hosp/cases,
+    .groups = "keep"
+  )
 #   group_by(state, race) %>%
 #   
 #   mutate(
@@ -34,7 +46,7 @@ df_states_racial_comb %>% summary()
 #   group_by(race,state,date)
 df_states_racial_comb %>%
   filter(!is.na(date)) %>% 
-  arrange(date) %>% 
+  arrange(desc(date)) %>% 
   group_by(date,state,race) %>% 
   mutate(
     cases = mean_run(cases, 8, idx = date),
@@ -128,6 +140,8 @@ ggplot(aes(x = date, y = deaths_per_cases, color = race)) +
   geom_point(aes(shape = race), size = 1) +
   geom_line() +
   facet_wrap(vars(race))
+
+
   
 ```
 
