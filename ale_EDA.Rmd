@@ -10,6 +10,7 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r setup}
 library(tidyverse)
 library(modelr)
+library(runner)
 source("cleaning.R")
 set.seed(42)
 ```
@@ -21,10 +22,112 @@ df_states_racial_comb %>% summary()
 ```
 
 ```{r}
+# df_states_racial_comb %>%
+#   group_by(state, race) %>%
+#   
+#   mutate(
+#     cases = lead(fct_reorder(cases, date)) - fct_reorder(cases, date),
+#     deaths = lead(deaths) - (deaths),
+#     hosp = lead(hosp) - (hosp)
+#   ) 
+# df_states_racial_comb %>%
+#   group_by(race,state,date)
 df_states_racial_comb %>%
+  filter(!is.na(date)) %>% 
+  arrange(date) %>% 
+  group_by(date,state,race) %>% 
   mutate(
-    
+    cases = mean_run(cases, 8, idx = date),
+    deaths = mean_run(deaths, 8 , idx = date),
+    hosp = mean_run(hosp, 8, idx = date),
+    new_cases = cases - lag(cases),
+    new_deaths = deaths - lag(deaths),
+    new_hosp = hosp - lag(hosp)
   )
+
+df_states_racial_comb %>%
+  filter(!is.na(date)) %>% 
+  arrange(date) %>% 
+  group_by(date,state,race) %>% 
+  mutate(
+    cases = mean_run(cases, 8, idx = date),
+    deaths = mean_run(deaths, 8 , idx = date),
+    hosp = mean_run(hosp, 8, idx = date),
+  ) %>% 
+  ungroup() %>% 
+  filter(!is.na(deaths)) %>% 
+  filter(!is.na(cases)) %>% 
+  group_by(date,state,race) %>% 
+  mutate(
+    new_cases = cases - lag(cases),
+    new_deaths = deaths - lag(deaths),
+  ) 
+
+df_states_racial_comb %>%
+  filter(!is.na(date)) %>% 
+  arrange(date) %>% 
+  group_by(date,state,race) %>% 
+  mutate(
+    cases = mean_run(cases, 8, idx = date),
+    deaths = mean_run(deaths, 8 , idx = date),
+    hosp = mean_run(hosp, 8, idx = date),
+  ) %>% 
+  ungroup() %>% 
+  filter(!is.na(hosp)) %>% 
+  filter(!is.na(cases)) %>% 
+  group_by(date, race) %>% 
+  summarise(
+    total_hosp = sum(hosp),
+    total_cases = sum(cases),
+    # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+    .groups = "keep") %>% 
+  ungroup() %>% 
+  group_by(race) %>% 
+  mutate(
+    new_hosp = total_hosp- lag(total_hosp),
+    new_cases = total_cases - lag(total_cases),
+    hosp_per_cases = new_hosp/new_cases
+  ) %>% 
+   filter(hosp_per_cases > 0)%>% 
+   filter(hosp_per_cases < .25) %>%
+ggplot(aes(x = date, y = hosp_per_cases, color = race)) +
+  geom_point(aes(shape = race), size = 1) +
+  geom_line() +
+  facet_wrap(vars(race))
+
+df_states_racial_comb %>%
+  filter(!is.na(date)) %>% 
+  arrange(date) %>% 
+  group_by(date,state,race) %>% 
+  mutate(
+    cases = mean_run(cases, 8, idx = date),
+    deaths = mean_run(deaths, 8 , idx = date),
+    hosp = mean_run(hosp, 8, idx = date),
+  ) %>% 
+  ungroup() %>% 
+  filter(!is.na(deaths)) %>% 
+  filter(!is.na(cases)) %>% 
+  group_by(date, race) %>% 
+  summarise(
+    total_deaths = sum(deaths),
+    total_cases = sum(cases),
+    # hosp_per_cases = sum(hosp, na.rm = "TRUE")/sum(cases,  na.rm = "TRUE"),
+    # deaths_per_hosp = sum(deaths,  na.rm = "TRUE")/sum(hosp,  na.rm = "TRUE"), 
+    .groups = "keep") %>% 
+  ungroup() %>% 
+  group_by(race) %>% 
+  mutate(
+    new_deaths = total_deaths- lag(total_deaths),
+    new_cases = total_cases - lag(total_cases),
+    deaths_per_cases = new_deaths/new_cases
+  ) %>% 
+   filter(deaths_per_cases > 0)%>% 
+   filter(deaths_per_cases < .25) %>%
+ggplot(aes(x = date, y = deaths_per_cases, color = race)) +
+  geom_point(aes(shape = race), size = 1) +
+  geom_line() +
+  facet_wrap(vars(race))
   
 ```
 
