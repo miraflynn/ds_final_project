@@ -22,6 +22,7 @@ df_states_racial_comb %>% summary()
 ```
 
 ```{r}
+`%notin%` <- Negate(`%in%`) 
 df_states_racial_comb %>%
   group_by(date) %>% 
   filter(date == max(date)) %>% 
@@ -31,10 +32,30 @@ df_states_racial_comb %>%
     cases = sum(cases),
     deaths = sum(deaths), 
     hosp = sum(hosp),
-    deaths_per_cases = deaths/cases,
-    hosp_per_cases = hosp/cases,
+    deaths_per_cases = deaths/cases*100,
+    hosp_per_cases = hosp/cases*100,
     .groups = "keep"
-  )
+  ) %>% 
+  arrange(deaths_per_cases) %>% 
+  ggplot(aes(x = fct_reorder(race,deaths_per_cases), y = deaths_per_cases)) +
+  geom_col()
+
+df_states_racial_comb %>%
+  group_by(date) %>% 
+  filter(date == max(date)) %>% 
+  filter_all(~!is.na(.)) %>% 
+  group_by(race) %>%
+  summarise(
+    cases = sum(cases),
+    deaths = sum(deaths), 
+    hosp = sum(hosp),
+    deaths_per_cases = deaths/cases*100,
+    hosp_per_cases = hosp/cases*100,
+    .groups = "keep"
+  ) %>% 
+  arrange(hosp_per_cases)%>% 
+  ggplot(aes(x = fct_reorder(race,hosp_per_cases), y = hosp_per_cases)) +
+  geom_col()
 #   group_by(state, race) %>%
 #   
 #   mutate(
@@ -79,14 +100,14 @@ df_states_racial_comb %>%
   filter(!is.na(date)) %>% 
   arrange(date) %>% 
   group_by(date,state,race) %>% 
-  mutate(
-    cases = mean_run(cases, 8, idx = date),
-    deaths = mean_run(deaths, 8 , idx = date),
-    hosp = mean_run(hosp, 8, idx = date),
-  ) %>% 
+  # mutate(
+  #   cases = mean_run(cases, 8, idx = date),
+  #   deaths = mean_run(deaths, 8 , idx = date),
+  #   hosp = mean_run(hosp, 8, idx = date),
+  # ) %>% 
   ungroup() %>% 
   filter(!is.na(hosp)) %>% 
-  filter(!is.na(cases)) %>% 
+  filter(!is.na(cases), race %notin% c("Other", "Unknown", "Multiracial")) %>% 
   group_by(date, race) %>% 
   summarise(
     total_hosp = sum(hosp),
@@ -104,22 +125,22 @@ df_states_racial_comb %>%
    filter(hosp_per_cases > 0)%>% 
    filter(hosp_per_cases < .25) %>%
 ggplot(aes(x = date, y = hosp_per_cases, color = race)) +
-  geom_point(aes(shape = race), size = 1) +
-  geom_line() +
+  #geom_point(aes(shape = race), size = 1) +
+  geom_line(size = 0.5, se = FALSE)+
   facet_wrap(vars(race))
 
 df_states_racial_comb %>%
   filter(!is.na(date)) %>% 
   arrange(date) %>% 
   group_by(date,state,race) %>% 
-  mutate(
-    cases = mean_run(cases, 8, idx = date),
-    deaths = mean_run(deaths, 8 , idx = date),
-    hosp = mean_run(hosp, 8, idx = date),
-  ) %>% 
+  # mutate(
+  #   cases = mean_run(cases, 8, idx = date),
+  #   deaths = mean_run(deaths, 8 , idx = date),
+  #   hosp = mean_run(hosp, 8, idx = date),
+  # ) %>% 
   ungroup() %>% 
   filter(!is.na(deaths)) %>% 
-  filter(!is.na(cases)) %>% 
+  filter(!is.na(cases), race %notin% c("Other", "Unknown","Multiracial")) %>% 
   group_by(date, race) %>% 
   summarise(
     total_deaths = sum(deaths),
@@ -134,11 +155,11 @@ df_states_racial_comb %>%
     new_cases = total_cases - lag(total_cases),
     deaths_per_cases = new_deaths/new_cases
   ) %>% 
-   filter(deaths_per_cases > 0)%>% 
+   filter(deaths_per_cases > 0) %>% 
    filter(deaths_per_cases < .25) %>%
 ggplot(aes(x = date, y = deaths_per_cases, color = race)) +
-  geom_point(aes(shape = race), size = 1) +
-  geom_line() +
+  #geom_point(aes(shape = race), size = 1) +
+  geom_line(size = 0.5, se= FALSE) +
   facet_wrap(vars(race))
 
 
