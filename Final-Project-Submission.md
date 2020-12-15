@@ -21,7 +21,7 @@ Ale Cuevas, Nolan Flynn, Kyle Bertram
 Are there racial inequalities in COVID rates in the US?
 
 ANSWER: Despite inconsistencies in the data, there are clear major
-racial inequities due to Covid.
+racial inequities due to COVID.
 
 ## Background
 
