@@ -75,6 +75,136 @@ df_states_racial_non_pivot %>%
   ggplot()+
   geom_line(aes(Date, test_rpt, color = State))
 ```
+```{r}
+?geom_bar
+df_states_racial_non_pivot %>%
+  mutate(
+    case_rpt = (Cases_Total-Cases_Unknown)/Cases_Total,
+    test_rpt = (Tests_Total-Tests_Unknown)/Tests_Total) %>%
+  select(Date, State, case_rpt, test_rpt) %>%
+  # group_by(Date)%>%
+  # summarise(Cases_Total = sum(Cases_Total, na.rm = TRUE), Cases_Unknown = sum(Cases_Unknown, na.rm = TRUE)) %>%
+  filter(test_rpt != 0) %>%
+  filter(State != "RI" & State != "NV") %>%
+  filter(Date == 20201209) %>%
+  mutate(State = fct_reorder(State, test_rpt)) %>%
+  ggplot()+
+  geom_col(aes(test_rpt, State, fill = State))
+```
+```{r, fig.height = 6}
+?geom_abline
+df_states_racial_non_pivot %>%
+  filter(State != "MP" &
+           State != "PR" &
+           State != "VI" &
+           State != "AS" &
+           State != "GU") %>%
+  mutate(
+    case_rpt = (Cases_Total-Cases_Unknown)/Cases_Total,
+    test_rpt = (Tests_Total-Tests_Unknown)/Tests_Total,
+    hosp_rpt = (Hosp_Total-Hosp_Unknown)/Hosp_Total,
+    death_rpt = (Deaths_Total-Deaths_Unknown)/Deaths_Total) %>%
+  select(Date, State, case_rpt, test_rpt, hosp_rpt, death_rpt) %>%
+  # group_by(Date)%>%
+  # summarise(Cases_Total = sum(Cases_Total, na.rm = TRUE), Cases_Unknown = sum(Cases_Unknown, na.rm = TRUE)) %>%
+  #filter(test_rpt != 0) %>%
+  #filter(State != "RI" & State != "NV") %>%
+  filter(Date == 20201209) %>%
+  mutate(State = fct_reorder(State, case_rpt)) %>%
+  ggplot()+
+  geom_point(aes(case_rpt, State)) +
+  geom_vline(aes(xintercept = 0.623, color = 'Overall US %' )) +
+  labs(
+    title = "Reported Cases with Racial Data",
+    subtitle = "As of 12-09-2020",
+    x = "% cases reported with race data",
+    y = "State",
+    color = NULL
+    ) +
+  theme_common() +
+  theme(
+    aspect.ratio = 9/16,
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 6)
+  )
+```
+
+```{r, fig.height = 6}
+df_states_racial_non_pivot %>%
+  filter(State != "MP" &
+           State != "PR" &
+           State != "VI" &
+           State != "AS" &
+           State != "GU") %>%
+  mutate(
+    case_rpt = (Cases_Total-Cases_Unknown)/Cases_Total,
+    test_rpt = (Tests_Total-Tests_Unknown)/Tests_Total,
+    hosp_rpt = (Hosp_Total-Hosp_Unknown)/Hosp_Total,
+    death_rpt = (Deaths_Total-Deaths_Unknown)/Deaths_Total) %>%
+  select(Date, State, case_rpt, test_rpt, hosp_rpt, death_rpt) %>%
+  # group_by(Date)%>%
+  # summarise(Cases_Total = sum(Cases_Total, na.rm = TRUE), Cases_Unknown = sum(Cases_Unknown, na.rm = TRUE)) %>%
+  #filter(test_rpt != 0) %>%
+  #filter(State != "RI" & State != "NV") %>%
+  filter(Date == 20201209) %>%
+  mutate(State = fct_reorder(State, death_rpt)) %>%
+  ggplot()+
+  geom_point(aes(death_rpt, State)) +
+  geom_vline(aes(xintercept = 0.932, color = 'Overall US %' )) +
+  labs(
+    title = "Reported Deaths with Racial Data",
+    subtitle = "As of 12-09-2020",
+    x = "% deaths reported with race data",
+    y = "State",
+    color = NULL
+    ) +
+  theme_common() +
+  theme(
+    aspect.ratio = 9/16,
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 6)
+  )
+```
+
+
+```{r, fig.height = 6}
+df_states_racial_non_pivot %>%
+  filter(State != "MP" &
+           State != "PR" &
+           State != "VI" &
+           State != "AS" &
+           State != "GU") %>%
+  mutate(
+    case_rpt = (Cases_Total-Cases_Unknown)/Cases_Total,
+    test_rpt = (Tests_Total-Tests_Unknown)/Tests_Total,
+    hosp_rpt = (Hosp_Total-Hosp_Unknown)/Hosp_Total,
+    death_rpt = (Deaths_Total-Deaths_Unknown)/Deaths_Total) %>%
+  select(Date, State, case_rpt, test_rpt, hosp_rpt, death_rpt) %>%
+  # group_by(Date)%>%
+  # summarise(Cases_Total = sum(Cases_Total, na.rm = TRUE), Cases_Unknown = sum(Cases_Unknown, na.rm = TRUE)) %>%
+  mutate(test_rpt = ifelse(is.na(test_rpt), 0, test_rpt)) %>%
+  #filter(test_rpt != 0) %>%
+  #filter(State != "RI" & State != "NV") %>%
+  filter(Date == 20201209) %>%
+  mutate(State = fct_reorder(State, test_rpt)) %>%
+  ggplot()+
+  geom_point(aes(test_rpt, State)) +
+  #geom_vline(aes(xintercept = 0.932, color = 'Overall US %' )) +
+  labs(
+    title = "Reported Tests with Racial Data",
+    subtitle = "As of 12-09-2020",
+    x = "% tests reported with race data",
+    y = "State",
+    color = NULL
+    ) +
+  theme_common() +
+  theme(
+    aspect.ratio = 9/16,
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 6)
+  )
+```
+
 
 
 
@@ -85,13 +215,16 @@ df_states_racial_comb %>%
   filter(!is.na(deaths)) %>%
   filter(!is.na(cases)) %>%
   filter(!is.na(date)) %>%
+  filter(race != "Other" &
+         race != "Multiracial" &
+         race != "Unknown") %>%
   arrange(date) %>%
   group_by(race, state) %>%
   mutate(
     delta_cases_inst = cases - lag(cases),
     delta_deaths_inst = deaths - lag(deaths),
-    rolling7dayavg_cases = mean_run(x = delta_cases_inst, k = 60, idx = date),
-    rolling7dayavg_deaths = mean_run(x = delta_deaths_inst, k = 60, idx = date)
+    rolling7dayavg_cases = mean_run(x = delta_cases_inst, k = 30, idx = date),
+    rolling7dayavg_deaths = mean_run(x = delta_deaths_inst, k = 30, idx = date)
   ) %>%
   select(date, state, race, rolling7dayavg_cases, rolling7dayavg_deaths) %>%
   filter(!is.na(rolling7dayavg_cases) |
@@ -101,7 +234,7 @@ df_states_racial_comb %>%
   group_by(date, race) %>%
   summarise(rolling7dayavg_cases = sum(rolling7dayavg_cases), rolling7dayavg_deaths = sum(rolling7dayavg_deaths))%>%
   mutate(death_rate = rolling7dayavg_deaths/rolling7dayavg_cases) %>%
-  filter(death_rate <= .3 & death_rate >= -0.3) %>%
+  filter(death_rate <= 1 & death_rate >= 0) %>%
   ggplot() +
   geom_line(aes(x = date, y = death_rate, color = race))#+
  # geom_line(aes(x = date, y = rolling7dayavg_cases, color = race))
@@ -109,14 +242,139 @@ df_states_racial_comb %>%
 
 
 
+### Death Rate Boxplot ###
+
+
+```{r}
+?geom_boxplot
+df_states_racial_comb %>%
+  filter(race != "Other" &
+         race != "Multiracial" &
+         race != "Unknown") %>%
+  group_by(date) %>% 
+  filter(date == "2020-12-09")%>%
+  mutate(death_rate = deaths/cases) %>%
+  #filter(death_rate <= 0.1) %>%
+  ungroup() %>%
+  filter(death_rate <= .11) %>%
+  mutate(race = fct_reorder(race, death_rate)) %>%
+  ggplot()+
+  geom_boxplot(aes(race,death_rate))
+
+```
 
 
 
 
-#### Death Rate By Time in Pandemic ###
+#### Nolan Graphs ###
 
 
+```{r}
+df_us_racial_comb <- df_states_racial_comb %>% group_by(date,race) %>%
+  filter(!is.na(cases)) %>%
+  filter(cases > 0) %>%
+  summarize(
+    state = "Sum of states that report cases",
+    cases = sum(cases, na.rm = TRUE),
+    population = sum(population, na.rm = TRUE),
+    race_estimate = sum(race_estimate, na.rm = TRUE)
+  )
+foo <- df_states_racial_comb %>%
+  merge(df_us_racial_comb, all = TRUE) %>%
+  filter(!is.na(cases)) %>%
+  filter(cases > 0) %>%
+  group_by(race, state) %>%
+  arrange(date) %>%
+  mutate(
+    delta_cases_inst = cases - lag(cases)
+  ) %>%
+  ungroup() %>%
+  group_by(state, date) %>%
+  # filter(all(delta_cases_inst >= 0)) %>%
+  ungroup() %>%
+  group_by(race, state) %>%
+  mutate(
+    delta_cases_avg = mean_run(x = delta_cases_inst, k = 15, idx = date)
+  ) %>%
+  # filter(delta_cases_inst > 0, delta_cases_avg > 0) %>%
+  filter(race_estimate > 5000) %>%
+  filter(race != "Other" & race != "Multiracial" & race != "Unknown") %>%
+  filter(state != "Utah") %>%
+  filter(state != "Rhode Island") %>%
+  ungroup() %>%
+  group_by(date, state) %>%
+  mutate(
+    tot_dcases_avg = sum(delta_cases_avg, na.rm = TRUE),
+    tot_dcases_inst = sum(delta_cases_inst, na.rm = TRUE),
+    tot_tested_pop = sum(race_estimate, na.rm = TRUE)
+  ) %>%
+  # filter(tot_dcases_avg > 1000 & tot_dcases_inst > 1000) %>%
+  # filter(tot_dcases_avg != tot_dcases_inst) %>%
+  ungroup() %>%
+  group_by(state) %>%
+  filter(tot_dcases_inst > 0) %>%
+  ungroup() %>%
+  group_by(state, race) %>%
+  filter(abs(tot_dcases_inst) / mean(tot_dcases_inst, na.rm = TRUE) < 2) %>%
+  ungroup() %>%
+  group_by(date, state, race) %>%
+  mutate(
+    dtest_frac_avg = delta_cases_avg/tot_dcases_avg,
+    dtest_frac_inst = delta_cases_inst/tot_dcases_inst,
+    pop_frac = race_estimate/tot_tested_pop,
+    cases_to_pop_ratio_avg = dtest_frac_avg / pop_frac,
+    cases_to_pop_ratio_inst = dtest_frac_inst / pop_frac
+  ) %>%
+  # filter(cases_to_pop_ratio_avg != 0, cases_to_pop_ratio_inst != 0) %>%
+  ungroup() %>%
+  group_by(state,race) %>%
+  filter((abs(cases_to_pop_ratio_inst)/mean(cases_to_pop_ratio_inst, na.rm = TRUE)) < 5) %>%
+  ungroup() %>%
+  group_by(date, state) %>%
+  filter(all(cases_to_pop_ratio_inst > 0)) %>%
+  ungroup() %>%
+  group_by(race, state) %>%
+  mutate(
+    cases_to_pop_ratio_avg2 = mean_run(x = cases_to_pop_ratio_inst, k = 30, idx = date)
+  ) %>%
+  pivot_longer(
+    cols = c(cases_to_pop_ratio_avg2, cases_to_pop_ratio_inst),
+    names_to = "avg_or_inst",
+    values_to = "cases_to_pop_ratio"
+  ) %>%
+  mutate(
+    avg_or_inst = ifelse(avg_or_inst == "cases_to_pop_ratio_avg2", "30 Day Average", "Instantaneous")
+  ) %>%
+  filter(state == "Sum of states that report cases")
+foo %>%
+  ggplot() +
+  geom_hline(color="black", alpha=0.5, yintercept=1)+
+  geom_line(aes(x = date, y = cases_to_pop_ratio, color = race, alpha = avg_or_inst, size = avg_or_inst)) +
+  scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
+  scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
+  facet_wrap(~ state) +
+  coord_cartesian(ylim = c(0,5)) +
+  theme_common() +
+  theme(
+    aspect.ratio = 9 / 16,
+    legend.title = element_text(size = 12, face = "bold"),
+    axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12, face = "bold"),
+    axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 12, angle = 90, face = "bold"),
+    legend.box.just = "right",
+    # plot.background = element_rect(color="blue")
+    #legend.margin = margin(0,0,0,0)
+    # legend.background = element_rect(size =  color = "blue")
+  ) +
+  labs(
+    x = "Date",
+    y = "Race Case % to Race Population %",
+    alpha = str_wrap("Average or Instantaneous", width = 20),
+    size = str_wrap("Average or Instantaneous", width = 20),
+    color = "Race"
+  )
 
+
+```
 
 
 
