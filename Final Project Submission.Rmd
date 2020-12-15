@@ -21,17 +21,63 @@ Are there racial inequalities in Covid rates in the US?
 
 ANSWER: Despite inconsistencies in the data, there are clear major racial inequities due to Covid.
 
+##Background
 
 
-#Case Test and Death Data by Race
 
+#Case By Race
+
+##Uncertainty 
+
+```{r Case Data by Race Inconsistencies, echo=FALSE}
+plot(pressure)
+```
+
+##Data
 ```{r Case Data by Race, echo=FALSE}
 plot(pressure)
 ```
 
+#Death by Race
+
+##Uncertainity
+
+```{r Death Data by Race Uncertainity, echo=FALSE}
+plot(pressure)
+```
+
+##Data
+
+```{r Death Data by Race Inconsistencies, echo=FALSE}
+plot(pressure)
+```
+
+
+#Test by Race
+
+##Uncertainity
+
+```{r Test Data by Race Uncertainity, echo=FALSE}
+plot(pressure)
+```
+
+##Data
+
 ```{r Test Data by Race, echo=FALSE}
 plot(pressure)
 ```
+
+
+
+
+
+
+
+
+#Case, Test and Death Data by Race
+
+
+
 
 ```{r Death Data by Race, echo=FALSE}
 plot(pressure)
@@ -39,28 +85,11 @@ plot(pressure)
 
 We cannot the eariler data due to high testing inconsistancies as seen below.
 
-#Test Reporting Inconsistencies
-
-```{r Case Data by Race Inconsistencies, echo=FALSE}
-plot(pressure)
-```
-
-```{r Test Data by Race Inconsistencies, echo=FALSE}
-plot(pressure)
-```
-
-```{r Death Data by Race Inconsistencies, echo=FALSE}
-plot(pressure)
-```
-
 
 #(Optional) Examples of Differences across states
 
 This trend can apply in states but we can also see alternative trends
 
-```{r Death Data by Race Inconsistencies, echo=FALSE}
-plot(pressure)
-```
 
 #Conclusions
 
