@@ -1,8 +1,10 @@
 ---
 title: "Final Project Submission"
-author: "Ale Cuevas [Add y'all names here]"
+author: "Ale Cuevas, Nolan Flynn, Kyle Bertram"
 date: "12/14/2020"
-output: github_document
+output: 
+  github_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -12,6 +14,7 @@ library(tidyverse)
 library(modelr)
 library(runner)
 source("cleaning.R")
+options(dplyr.summarise.inform = FALSE)
 set.seed(42)
 ```
 ## Question 
@@ -19,10 +22,31 @@ Are there racial inequalities in COVID rates in the US?
 
 ANSWER: Despite inconsistencies in the data, there are clear major racial inequities due to Covid.
 
-##Background
+## Background
 
+COVID-19 is a global pandemic that has infected 16.5 million people throughout the US and resulted in the loss of over 40 million jobs (Wikipedia). The impacts of this pandemic on daily life are undeniable, and the disease has touched people of every social, economic, racial and geographic status.
+
+In order to answer our question, we analyzed racially disaggregated data from COVID Tracking Project. In their statement of their mission, The COVID Tracking Project is working to provide the public with complete, accessible data about COVID-19 in the US. They have been collecting race data through a collaboration with the [Boston University Center for Antiracist Research](https://www.bu.edu/antiracist-center) and publish their data twice a week. The data includes counts for reported cases, deaths, hospitalizations and tests for the total population of the state, as well as numbers for major racial and ethnic groups.
+
+In order to better answer our question, we combined this with state level data on racial population make up from the Census Bureau’s 2018 ACS 5-Year data. 
+
+The data we used can be found here:
+[COVID Tracking Project Race Data](https://covidtracking.com/race/dashboard)
+Census Bureau’s 2018 ACS 5-Year - Tables B02001, B03002
+
+
+
+# Analyzing Uncertainty
+
+One of the most important things to note with the data from the COVID Tracking Project, is that this data is not a random sampling. People are only going to get tested when they have a reason such as being symptomatic. Health care knowledge and capacities have been changing over time. And there are many confounding variables, especially when looking at hospitalization/death rates, like age or having another disease.
+
+Due to having a large number of observations we can ignore some of the confounding variables. One factor that we cannot ignore is that this data has been aggregated from state level reports, and each state is reporting different information in different ways. This can lead to certain racial groups being over or underrepresented. 
+
+To analyze the uncertainty from imperfect reporting methods we computed the percent of cases, deaths and tests that were reported with racial data. 
+
+
+## Case Uncertainty
 ```{r Case Data by Race Inconsistencies, fig.height = 6, echo=FALSE}
-?geom_abline
 df_states_racial_non_pivot %>%
   filter(State != "MP" &
            State != "PR" &
@@ -47,18 +71,25 @@ df_states_racial_non_pivot %>%
   labs(
     title = "Reported Cases with Racial Data",
     subtitle = "As of 12-09-2020",
-    x = "% cases reported with race data",
+    x = "% Cases Reported with Race Data",
     y = "State",
     color = NULL
     ) +
   theme_common() +
   theme(
-    aspect.ratio = 9/16,
+    # aspect.ratio = 9/16,
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 6)
   )
 ```
 
+The country wide percent of cases reporting race is 62.6%.
+
+Only 7 states report race at a lower race than this, however Texas and New York are two of these states and they both have a high population.
+
+With only a national rate of 62.6% of cases having racial data, we have a lot of uncertainty here, and while we might be able to notice trends in cases there is enough uncertainty in our data to prevent making conclusive claims. 
+
+## Death Uncertainty
 ```{r Death Data by Race Uncertainity, fig.height = 6, echo=FALSE}
 df_states_racial_non_pivot %>%
   filter(State != "MP" &
@@ -84,17 +115,26 @@ df_states_racial_non_pivot %>%
   labs(
     title = "Reported Deaths with Racial Data",
     subtitle = "As of 12-09-2020",
-    x = "% deaths reported with race data",
+    x = "% Deaths Reported with Race Data",
     y = "State",
     color = NULL
     ) +
   theme_common() +
   theme(
-    aspect.ratio = 9/16,
+    # aspect.ratio = 9/16,
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 6)
   )
 ```
+
+
+The country wide percent of deaths reporting race is 93.2%.
+
+All but 3 states are reporting racial information alongside deaths at a rate of at least 75%, with all but 10 states reporting at a rate of 87.5%.
+
+With a national rate of 93.2% of deaths having racial data, we can make more confident claims when analyzing deaths.
+
+## Test Uncertainty
 ```{r Test Data by Race Uncertainity, fig.height = 6,echo=FALSE}
 df_states_racial_non_pivot %>%
   filter(State != "MP" &
@@ -121,38 +161,240 @@ df_states_racial_non_pivot %>%
   labs(
     title = "Reported Tests with Racial Data",
     subtitle = "As of 12-09-2020",
-    x = "% tests reported with race data",
+    x = "% Tests Reported with Race Data",
     y = "State",
     color = NULL
     ) +
   theme_common() +
   theme(
-    aspect.ratio = 9/16,
+    # aspect.ratio = 9/16,
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 6)
   )
 ```
 
-#Data
 
-##Case Data
-```{r Case Data by Race,  fig.height = 6,echo=FALSE}
+Only 7 states reported racial information along with testing data, this means that there is high uncertainty when analyzing testing data on a national scale.
 
+# Data
+
+The following graphs are designed to show the ratio of racial testing rates to racial population. For example, the formula for Black tests performed would be:
+(Black tests / total tests) / (Black population / total population)
+
+## Case Data
+```{r Case Data by Race, echo=FALSE}
+df_us_racial_comb <- df_states_racial_comb %>%
+  group_by(date,race) %>%
+  filter(!is.na(cases)) %>%
+  filter(cases > 0) %>%
+  summarize(
+    state = "Sum of states that report cases",
+    cases = sum(cases, na.rm = TRUE),
+    population = sum(population, na.rm = TRUE),
+    race_estimate = sum(race_estimate, na.rm = TRUE)
+  )
+cases <- df_states_racial_comb %>%
+  merge(df_us_racial_comb, all = TRUE) %>%
+  filter(!is.na(cases)) %>%
+  filter(cases > 0) %>%
+  group_by(race, state) %>%
+  arrange(date) %>%
+  mutate(
+    delta_cases_inst = cases - lag(cases)
+  ) %>%
+  ungroup() %>%
+  group_by(race, state) %>%
+  mutate(
+    delta_cases_avg = mean_run(x = delta_cases_inst, k = 15, idx = date)
+  ) %>%
+  filter(race_estimate > 5000) %>%
+  filter(race != "Other" & race != "Multiracial" & race != "Unknown") %>%
+  filter(state != "Utah") %>%
+  filter(state != "Rhode Island") %>%
+  ungroup() %>%
+  group_by(date, state) %>%
+  mutate(
+    tot_dcases_avg = sum(delta_cases_avg, na.rm = TRUE),
+    tot_dcases_inst = sum(delta_cases_inst, na.rm = TRUE),
+    tot_tested_pop = sum(race_estimate, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  group_by(state) %>%
+  filter(tot_dcases_inst > 0) %>%
+  ungroup() %>%
+  group_by(state, race) %>%
+  filter(abs(tot_dcases_inst) / mean(tot_dcases_inst, na.rm = TRUE) < 2) %>%
+  ungroup() %>%
+  group_by(date, state, race) %>%
+  mutate(
+    dtest_frac_avg = delta_cases_avg/tot_dcases_avg,
+    dtest_frac_inst = delta_cases_inst/tot_dcases_inst,
+    pop_frac = race_estimate/tot_tested_pop,
+    cases_to_pop_ratio_avg = dtest_frac_avg / pop_frac,
+    cases_to_pop_ratio_inst = dtest_frac_inst / pop_frac
+  ) %>%
+  ungroup() %>%
+  group_by(state,race) %>%
+  filter((abs(cases_to_pop_ratio_inst)/mean(cases_to_pop_ratio_inst, na.rm = TRUE)) < 5) %>%
+  ungroup() %>%
+  group_by(date, state) %>%
+  filter(all(cases_to_pop_ratio_inst > 0)) %>%
+  ungroup() %>%
+  group_by(race, state) %>%
+  mutate(
+    cases_to_pop_ratio_avg2 = mean_run(x = cases_to_pop_ratio_inst, k = 30, idx = date)
+  ) %>%
+  pivot_longer(
+    cols = c(cases_to_pop_ratio_avg2, cases_to_pop_ratio_inst),
+    names_to = "avg_or_inst",
+    values_to = "cases_to_pop_ratio"
+  ) %>%
+  mutate(
+    avg_or_inst = ifelse(avg_or_inst == "cases_to_pop_ratio_avg2", "30 Day Average", "Instantaneous")
+  ) %>%
+  filter(state == "Sum of states that report cases")
+cases %>%
+  ggplot() +
+  geom_hline(color="black", alpha=0.5, yintercept=1)+
+  geom_line(aes(x = date, y = cases_to_pop_ratio, color = race, alpha = avg_or_inst, size = avg_or_inst)) +
+  scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
+  scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
+  # facet_wrap(~ state) +
+  coord_cartesian(ylim = c(0.3,10)) +
+  theme_common() +
+  theme(aspect.ratio = 9 / 16,
+      axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12),
+      axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 12, angle = 90),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      plot.title.position = "panel",
+      ) +
+  guides(
+    color = guide_legend(override.aes = list(size = 1))
+  ) +
+  labs(
+    title = "Case Disparities over Time by Race",
+    x = "Date",
+    y = "Race Case % to Race Population %",
+    alpha = str_wrap("Average or Instantaneous", width = 20),
+    size = str_wrap("Average or Instantaneous", width = 20),
+    color = "Race"
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  scale_y_log10(breaks = c(0.1, 0.3,1,3,10))
 ```
 
-The Hawaiian and Pacific Islander population got COVID far above their population size for the whole pandemic, but less so in the more recent months
+The Hawaiian and Pacific Islander (NHPI) population got COVID far above their population size for the whole pandemic, but less so in the more recent months
 
 The Native American (AIAN), Black, and LatinX populations got COVID at a much higher rate for most of the pandemic, with Black and LatinX dipping below 1 around October and Native American still disproportionately high.
 
 The Asian population is getting COVID at noticeably lower rates, despite being tested above their population percentage
 
 
-##Death Data
-```{r Death Data by Race, fig.height = 6, echo=FALSE}
-
+## Death Data
+```{r Death Data by Race, echo=FALSE}
+df_us_racial_comb <- df_states_racial_comb %>%
+  group_by(date,race) %>%
+  filter(!is.na(deaths)) %>%
+  filter(deaths > 0) %>%
+  summarize(
+    state = "Sum of states that report deaths",
+    deaths = sum(deaths, na.rm = TRUE),
+    population = sum(population, na.rm = TRUE),
+    race_estimate = sum(race_estimate, na.rm = TRUE)
+  )
+deaths <- df_states_racial_comb %>%
+  merge(df_us_racial_comb, all = TRUE) %>%
+  filter(!is.na(deaths)) %>%
+  filter(deaths > 0) %>%
+  group_by(race, state) %>%
+  arrange(date) %>%
+  mutate(
+    delta_deaths_inst = deaths - lag(deaths)
+  ) %>%
+  ungroup() %>%
+  group_by(race, state) %>%
+  mutate(
+    delta_deaths_avg = mean_run(x = delta_deaths_inst, k = 15, idx = date)
+  ) %>%
+  filter(race_estimate > 5000) %>%
+  filter(race != "Other" & race != "Multiracial" & race != "Unknown") %>%
+  filter(state != "Utah") %>%
+  filter(state != "Rhode Island") %>%
+  ungroup() %>%
+  group_by(date, state) %>%
+  mutate(
+    tot_ddeaths_avg = sum(delta_deaths_avg, na.rm = TRUE),
+    tot_ddeaths_inst = sum(delta_deaths_inst, na.rm = TRUE),
+    tot_tested_pop = sum(race_estimate, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  group_by(state) %>%
+  filter(tot_ddeaths_inst > 0) %>%
+  ungroup() %>%
+  group_by(state, race) %>%
+  filter(abs(tot_ddeaths_inst) / mean(tot_ddeaths_inst, na.rm = TRUE) < 2) %>%
+  ungroup() %>%
+  group_by(date, state, race) %>%
+  mutate(
+    dtest_frac_avg = delta_deaths_avg/tot_ddeaths_avg,
+    dtest_frac_inst = delta_deaths_inst/tot_ddeaths_inst,
+    pop_frac = race_estimate/tot_tested_pop,
+    deaths_to_pop_ratio_avg = dtest_frac_avg / pop_frac,
+    deaths_to_pop_ratio_inst = dtest_frac_inst / pop_frac
+  ) %>%
+  ungroup() %>%
+  group_by(state,race) %>%
+  filter((abs(deaths_to_pop_ratio_inst)/mean(deaths_to_pop_ratio_inst, na.rm = TRUE)) < 5) %>%
+  ungroup() %>%
+  group_by(date, state) %>%
+  filter(all(deaths_to_pop_ratio_inst > 0)) %>%
+  ungroup() %>%
+  group_by(race, state) %>%
+  mutate(
+    deaths_to_pop_ratio_avg2 = mean_run(x = deaths_to_pop_ratio_inst, k = 30, idx = date)
+  ) %>%
+  pivot_longer(
+    cols = c(deaths_to_pop_ratio_avg2, deaths_to_pop_ratio_inst),
+    names_to = "avg_or_inst",
+    values_to = "deaths_to_pop_ratio"
+  ) %>%
+  mutate(
+    avg_or_inst = ifelse(avg_or_inst == "deaths_to_pop_ratio_avg2", "30 Day Average", "Instantaneous")
+  ) %>%
+  filter(state == "Sum of states that report deaths")
+deaths %>%
+  ggplot() +
+  geom_hline(color="black", alpha=0.5, yintercept=1)+
+  geom_line(aes(x = date, y = deaths_to_pop_ratio, color = race, alpha = avg_or_inst, size = avg_or_inst)) +
+  scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
+  scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
+  # facet_wrap(~ state) +
+  coord_cartesian(ylim = c(0.3,10)) +
+  theme_common() +
+  theme(aspect.ratio = 9 / 16,
+      axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12),
+      axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 12, angle = 90),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      plot.title.position = "panel",
+      ) +
+  guides(
+    color = guide_legend(override.aes = list(size = 1))
+  ) +
+  labs(
+    title = "Death Disparities over Time by Race",
+    x = "Date",
+    y = "Race Death % to Race Population %",
+    alpha = str_wrap("Average or Instantaneous", width = 20),
+    size = str_wrap("Average or Instantaneous", width = 20),
+    color = "Race"
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  scale_y_log10(breaks = c(0.1,0.3,1,3,10))
 ```
 
-The NHPI and AIAN populations have the worst death rates for the vast majority of the year.
+The Hawaiian and Pacific Islander and Native American populations have the worst death rates for the vast majority of the year.
 
 Black death rates started out disproportionately high, before decreasing,and crossing the threshold around late October, before continuing to decrease to have a lower proportion.
 
@@ -161,12 +403,110 @@ The White population death rates were consistently below average before increasi
 The Asian population has been consistently significantly below average.
 
 
-##Test Data
-```{r Test Data by Race, fig.height = 6, echo=FALSE}
-
+## Test Data
+```{r Test Data by Race, echo=FALSE}
+df_us_racial_comb <- df_states_racial_comb %>%
+  group_by(date,race) %>%
+  filter(!is.na(tests)) %>%
+  filter(tests > 0) %>%
+  summarize(
+    state = "Sum of states that report tests",
+    tests = sum(tests, na.rm = TRUE),
+    population = sum(population, na.rm = TRUE),
+    race_estimate = sum(race_estimate, na.rm = TRUE)
+  )
+tests <- df_states_racial_comb %>%
+  merge(df_us_racial_comb, all = TRUE) %>%
+  filter(!is.na(tests)) %>%
+  filter(tests > 0) %>%
+  group_by(race, state) %>%
+  arrange(date) %>%
+  mutate(
+    delta_tests_inst = tests - lag(tests)
+  ) %>%
+  ungroup() %>%
+  group_by(race, state) %>%
+  mutate(
+    delta_tests_avg = mean_run(x = delta_tests_inst, k = 15, idx = date)
+  ) %>%
+  filter(race_estimate > 5000) %>%
+  filter(race != "Other" & race != "Multiracial" & race != "Unknown") %>%
+  filter(state != "Utah") %>%
+  filter(state != "Rhode Island") %>%
+  ungroup() %>%
+  group_by(date, state) %>%
+  mutate(
+    tot_dtests_avg = sum(delta_tests_avg, na.rm = TRUE),
+    tot_dtests_inst = sum(delta_tests_inst, na.rm = TRUE),
+    tot_tested_pop = sum(race_estimate, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  group_by(state) %>%
+  filter(tot_dtests_inst > 0) %>%
+  ungroup() %>%
+  group_by(state, race) %>%
+  filter(abs(tot_dtests_inst) / mean(tot_dtests_inst, na.rm = TRUE) < 2) %>%
+  ungroup() %>%
+  group_by(date, state, race) %>%
+  mutate(
+    dtest_frac_avg = delta_tests_avg/tot_dtests_avg,
+    dtest_frac_inst = delta_tests_inst/tot_dtests_inst,
+    pop_frac = race_estimate/tot_tested_pop,
+    tests_to_pop_ratio_avg = dtest_frac_avg / pop_frac,
+    tests_to_pop_ratio_inst = dtest_frac_inst / pop_frac
+  ) %>%
+  ungroup() %>%
+  group_by(state,race) %>%
+  filter((abs(tests_to_pop_ratio_inst)/mean(tests_to_pop_ratio_inst, na.rm = TRUE)) < 5) %>%
+  ungroup() %>%
+  group_by(date, state) %>%
+  filter(all(tests_to_pop_ratio_inst > 0)) %>%
+  ungroup() %>%
+  group_by(race, state) %>%
+  mutate(
+    tests_to_pop_ratio_avg2 = mean_run(x = tests_to_pop_ratio_inst, k = 30, idx = date)
+  ) %>%
+  pivot_longer(
+    cols = c(tests_to_pop_ratio_avg2, tests_to_pop_ratio_inst),
+    names_to = "avg_or_inst",
+    values_to = "tests_to_pop_ratio"
+  ) %>%
+  mutate(
+    avg_or_inst = ifelse(avg_or_inst == "tests_to_pop_ratio_avg2", "30 Day Average", "Instantaneous")
+  ) %>%
+  filter(state == "Sum of states that report tests")
+tests %>%
+  ggplot() +
+  geom_hline(color="black", alpha=0.5, yintercept=1)+
+  geom_line(aes(x = date, y = tests_to_pop_ratio, color = race, alpha = avg_or_inst, size = avg_or_inst)) +
+  scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
+  scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
+  # facet_wrap(~ state) +
+  coord_cartesian(ylim = c(0.3,10)) +
+  theme_common() +
+  theme(aspect.ratio = 9 / 16,
+      axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12),
+      axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 12, angle = 90),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      plot.title.position = "panel",
+      ) +
+  guides(
+    color = guide_legend(override.aes = list(size = 1))
+  ) +
+  labs(
+    title = "Test Disparities over Time by Race",
+    x = "Date",
+    y = "Race Test % to Race Population %",
+    alpha = str_wrap("Average or Instantaneous", width = 20),
+    size = str_wrap("Average or Instantaneous", width = 20),
+    color = "Race"
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  scale_y_log10(breaks = c(0.1,0.3,1,3,10))
 ```
 
-We can see that the Hawaiian and Pacific Islander (NHPI) population has been consistently tested far above their population size
+We can see that the Hawaiian and Pacific Islander population has been consistently tested far above their population size
 
 The Black population was tested above their population size at the beginning of the pandemic, but dipped below 1 around October
 
@@ -176,13 +516,15 @@ The Asian population were being tested at lower rates relative to the population
 
 
 
-#Conclusions
+# Conclusions
 
- More consistent race reporting is needed to better understand racial impact.
- 
- States should examine their situation individually and develop programs to alleviate inequality.
 
-Overall we need to implement better safety/testing programs to reduce inequality
-focus on lessening inequality
-(confounding variable is economic status)
-(both in being essential workers and in ability to get tested/decision to go to hospital)
+From analyzing the testing rates, we know that while our analysis might uncover potential trends, we need to use caution when making any conclusions on the data as there are high rates of non-reporting. Additionally, due to unevenly spread populations of different ethnic groups across different states, the differing reporting policies per state could cause certain racial groups to be over or underrepresented.
+
+With this in mind we analyzed our graphs. In the graphs for both American Indian and Alaska Native (AIAN), and the Native Hawaian and Pacfic Islander (NHPI) populations, we can see that they have consistently higher case and death rates. While there is some uncertainty in the case data due to incomplete reporting, we are fairly confident in the death data, since these two factors align we are fairly confident that the racial disparity exists. 
+
+# Unanswered Questions
+
+What does the unreported data look like? How would the inclusion of the unreported data change our current trends? Would they change at all?
+
+What additional trends would analyzing socioeconomic status show? Would there be any correlation with race?
