@@ -2,14 +2,12 @@
 title: "Final Project Submission"
 author: "Ale Cuevas [Add y'all names here]"
 date: "12/14/2020"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
 
-```{r setup}
 library(tidyverse)
 library(modelr)
 library(runner)
@@ -17,45 +15,166 @@ source("cleaning.R")
 set.seed(42)
 ```
 ## Question 
-Are there racial inequalities in Covid rates in the US?
+Are there racial inequalities in COVID rates in the US?
 
 ANSWER: Despite inconsistencies in the data, there are clear major racial inequities due to Covid.
 
 ##Background
 
-#Uncertainty
-
-##Case Uncertainty 
-```{r Case Data by Race Inconsistencies, echo=FALSE}
-plot(pressure)
+```{r Case Data by Race Inconsistencies, fig.height = 6, echo=FALSE}
+?geom_abline
+df_states_racial_non_pivot %>%
+  filter(State != "MP" &
+           State != "PR" &
+           State != "VI" &
+           State != "AS" &
+           State != "GU") %>%
+  mutate(
+    case_rpt = (Cases_Total-Cases_Unknown)/Cases_Total,
+    test_rpt = (Tests_Total-Tests_Unknown)/Tests_Total,
+    hosp_rpt = (Hosp_Total-Hosp_Unknown)/Hosp_Total,
+    death_rpt = (Deaths_Total-Deaths_Unknown)/Deaths_Total) %>%
+  select(Date, State, case_rpt, test_rpt, hosp_rpt, death_rpt) %>%
+  # group_by(Date)%>%
+  # summarise(Cases_Total = sum(Cases_Total, na.rm = TRUE), Cases_Unknown = sum(Cases_Unknown, na.rm = TRUE)) %>%
+  #filter(test_rpt != 0) %>%
+  #filter(State != "RI" & State != "NV") %>%
+  filter(Date == 20201209) %>%
+  mutate(State = fct_reorder(State, case_rpt)) %>%
+  ggplot()+
+  geom_point(aes(case_rpt, State)) +
+  geom_vline(aes(xintercept = 0.623, color = 'Overall US %' )) +
+  labs(
+    title = "Reported Cases with Racial Data",
+    subtitle = "As of 12-09-2020",
+    x = "% cases reported with race data",
+    y = "State",
+    color = NULL
+    ) +
+  theme_common() +
+  theme(
+    aspect.ratio = 9/16,
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 6)
+  )
 ```
 
-## Death Uncertainty
-```{r Death Data by Race Uncertainity, echo=FALSE}
-plot(pressure)
+```{r Death Data by Race Uncertainity, fig.height = 6, echo=FALSE}
+df_states_racial_non_pivot %>%
+  filter(State != "MP" &
+           State != "PR" &
+           State != "VI" &
+           State != "AS" &
+           State != "GU") %>%
+  mutate(
+    case_rpt = (Cases_Total-Cases_Unknown)/Cases_Total,
+    test_rpt = (Tests_Total-Tests_Unknown)/Tests_Total,
+    hosp_rpt = (Hosp_Total-Hosp_Unknown)/Hosp_Total,
+    death_rpt = (Deaths_Total-Deaths_Unknown)/Deaths_Total) %>%
+  select(Date, State, case_rpt, test_rpt, hosp_rpt, death_rpt) %>%
+  # group_by(Date)%>%
+  # summarise(Cases_Total = sum(Cases_Total, na.rm = TRUE), Cases_Unknown = sum(Cases_Unknown, na.rm = TRUE)) %>%
+  #filter(test_rpt != 0) %>%
+  #filter(State != "RI" & State != "NV") %>%
+  filter(Date == 20201209) %>%
+  mutate(State = fct_reorder(State, death_rpt)) %>%
+  ggplot()+
+  geom_point(aes(death_rpt, State)) +
+  geom_vline(aes(xintercept = 0.932, color = 'Overall US %' )) +
+  labs(
+    title = "Reported Deaths with Racial Data",
+    subtitle = "As of 12-09-2020",
+    x = "% deaths reported with race data",
+    y = "State",
+    color = NULL
+    ) +
+  theme_common() +
+  theme(
+    aspect.ratio = 9/16,
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 6)
+  )
 ```
-
-## Test Uncertainty
-```{r Test Data by Race Uncertainity, echo=FALSE}
-plot(pressure)
+```{r Test Data by Race Uncertainity, fig.height = 6,echo=FALSE}
+df_states_racial_non_pivot %>%
+  filter(State != "MP" &
+           State != "PR" &
+           State != "VI" &
+           State != "AS" &
+           State != "GU") %>%
+  mutate(
+    case_rpt = (Cases_Total-Cases_Unknown)/Cases_Total,
+    test_rpt = (Tests_Total-Tests_Unknown)/Tests_Total,
+    hosp_rpt = (Hosp_Total-Hosp_Unknown)/Hosp_Total,
+    death_rpt = (Deaths_Total-Deaths_Unknown)/Deaths_Total) %>%
+  select(Date, State, case_rpt, test_rpt, hosp_rpt, death_rpt) %>%
+  # group_by(Date)%>%
+  # summarise(Cases_Total = sum(Cases_Total, na.rm = TRUE), Cases_Unknown = sum(Cases_Unknown, na.rm = TRUE)) %>%
+  mutate(test_rpt = ifelse(is.na(test_rpt), 0, test_rpt)) %>%
+  #filter(test_rpt != 0) %>%
+  #filter(State != "RI" & State != "NV") %>%
+  filter(Date == 20201209) %>%
+  mutate(State = fct_reorder(State, test_rpt)) %>%
+  ggplot()+
+  geom_point(aes(test_rpt, State)) +
+  #geom_vline(aes(xintercept = 0.932, color = 'Overall US %' )) +
+  labs(
+    title = "Reported Tests with Racial Data",
+    subtitle = "As of 12-09-2020",
+    x = "% tests reported with race data",
+    y = "State",
+    color = NULL
+    ) +
+  theme_common() +
+  theme(
+    aspect.ratio = 9/16,
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 6)
+  )
 ```
 
 #Data
 
 ##Case Data
-```{r Case Data by Race, echo=FALSE}
-plot(pressure)
+```{r Case Data by Race,  fig.height = 6,echo=FALSE}
+
 ```
+
+The Hawaiian and Pacific Islander population got COVID far above their population size for the whole pandemic, but less so in the more recent months
+
+The Native American (AIAN), Black, and LatinX populations got COVID at a much higher rate for most of the pandemic, with Black and LatinX dipping below 1 around October and Native American still disproportionately high.
+
+The Asian population is getting COVID at noticeably lower rates, despite being tested above their population percentage
+
 
 ##Death Data
-```{r Death Data by Race, echo=FALSE}
-plot(pressure)
+```{r Death Data by Race, fig.height = 6, echo=FALSE}
+
 ```
 
+The NHPI and AIAN populations have the worst death rates for the vast majority of the year.
+
+Black death rates started out disproportionately high, before decreasing,and crossing the threshold around late October, before continuing to decrease to have a lower proportion.
+
+The White population death rates were consistently below average before increasing and crossing the threshold around the same time as Black people in late October, before increasing and being slightly above average.
+
+The Asian population has been consistently significantly below average.
+
+
 ##Test Data
-```{r Test Data by Race, echo=FALSE}
-plot(pressure)
+```{r Test Data by Race, fig.height = 6, echo=FALSE}
+
 ```
+
+We can see that the Hawaiian and Pacific Islander (NHPI) population has been consistently tested far above their population size
+
+The Black population was tested above their population size at the beginning of the pandemic, but dipped below 1 around October
+
+The White population got to about 1 in July and remained around there since
+
+The Asian population were being tested at lower rates relative to the population at the beginning of the pandemic but are now tested at a higher rate
+
+
 
 #Conclusions
 

@@ -74,7 +74,7 @@ df_states_racial <- read_csv(filename_states_racial) %>%
     cols = c(-"Date",-"State")
   )
 
-# df_states_racial_non_pivot <- read_csv(filename_states_racial)
+df_states_racial_non_pivot <- read_csv(filename_states_racial)
 
 
 # df_pop_racial <- read_csv(filename_pop_racial, skip = 1,col_types = cols(.default = col_character())) %>%
