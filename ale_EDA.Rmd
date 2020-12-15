@@ -23,6 +23,28 @@ df_states_racial_comb %>% summary()
 
 ```{r}
 `%notin%` <- Negate(`%in%`) 
+
+df_states_racial_comb %>%
+  filter(date == "2020-12-09", race %notin% c("Other", "Unknown", "Multiracial")) %>% 
+  filter(!is.na(deaths)) %>% 
+  filter(!is.na(cases)) %>% 
+  group_by(race) %>% 
+  summarise(
+    cases = sum(cases),
+    deaths = sum(deaths), 
+    hosp = sum(hosp),
+    deaths_per_cases = deaths/cases*100,
+    hosp_per_cases = hosp/cases*100,
+    .groups = "keep"
+  ) %>% 
+  arrange(deaths_per_cases) %>% 
+  ggplot(aes(x = fct_reorder(race,deaths_per_cases), y = deaths_per_cases)) +
+  geom_col() +
+  theme_common() +
+  theme(aspect.ratio = 9 / 16)+
+  labs(title = "Cumulative Deaths Per Cases", x = "")
+
+
 df_states_racial_comb %>%
   group_by(date) %>% 
   filter(date == max(date), race %notin% c("Other", "Unknown", "Multiracial")) %>% 
@@ -40,24 +62,28 @@ df_states_racial_comb %>%
   ggplot(aes(x = fct_reorder(race,deaths_per_cases), y = deaths_per_cases)) +
   geom_col() +
   theme_common() +
-  theme(aspect.ratio = 9 / 16)
+  theme(aspect.ratio = 9 / 16)+
+  labs(title = "Cumulative Deaths Per Cases", x = "")
 
 df_states_racial_comb %>%
-  group_by(date) %>% 
-  filter(date == max(date), race %notin% c("Other", "Unknown", "Multiracial")) %>% 
-  filter_all(~!is.na(.)) %>% 
-  group_by(race) %>%
+  filter(date == "2020-12-09", race %notin% c("Other", "Unknown", "Multiracial")) %>% 
+  filter(!is.na(hosp)) %>% 
+  filter(!is.na(cases)) %>% 
+  group_by(race) %>% 
   summarise(
     cases = sum(cases),
-    deaths = sum(deaths), 
+    # deaths = sum(deaths), 
     hosp = sum(hosp),
-    deaths_per_cases = deaths/cases*100,
+    # deaths_per_cases = deaths/cases*100,
     hosp_per_cases = hosp/cases*100,
     .groups = "keep"
   ) %>% 
   arrange(hosp_per_cases)%>% 
-  ggplot(aes(x = fct_reorder(race,hosp_per_cases), y = hosp_per_cases)) +
-  geom_col()
+  ggplot(aes(x = fct_reorder(race, hosp_per_cases), y = hosp_per_cases)) +
+  geom_col() +
+  theme_common()+
+  theme(aspect.ratio = 9 / 16) +
+  labs(title = "Cumulative Hospitalizations Per Cases", x = "")
 #   group_by(state, race) %>%
 #   
 #   mutate(
