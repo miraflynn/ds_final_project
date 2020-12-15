@@ -307,7 +307,7 @@ tests %>%
   scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
   scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
   # facet_wrap(~ state) +
-  coord_cartesian(ylim = c(0,5)) +
+  coord_cartesian(ylim = c(0.3,10)) +
   theme_common() +
   theme(aspect.ratio = 9 / 16,
       axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12),
@@ -316,6 +316,9 @@ tests %>%
       axis.text.y = element_text(size = 10),
       plot.title.position = "panel",
       ) +
+  guides(
+    color = guide_legend(override.aes = list(size = 1))
+  ) +
   labs(
     title = "Test Disparities over Time by Race",
     x = "Date",
@@ -324,7 +327,8 @@ tests %>%
     size = str_wrap("Average or Instantaneous", width = 20),
     color = "Race"
   ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b")
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  scale_y_log10(breaks = c(0.1,0.3,1,3,10))
 
 
 ```
@@ -409,7 +413,7 @@ cases %>%
   scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
   scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
   # facet_wrap(~ state) +
-  coord_cartesian(ylim = c(0,5)) +
+  coord_cartesian(ylim = c(0.3,10)) +
   theme_common() +
   theme(aspect.ratio = 9 / 16,
       axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12),
@@ -418,6 +422,9 @@ cases %>%
       axis.text.y = element_text(size = 10),
       plot.title.position = "panel",
       ) +
+  guides(
+    color = guide_legend(override.aes = list(size = 1))
+  ) +
   labs(
     title = "Case Disparities over Time by Race",
     x = "Date",
@@ -426,7 +433,8 @@ cases %>%
     size = str_wrap("Average or Instantaneous", width = 20),
     color = "Race"
   ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b")
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  scale_y_log10(breaks = c(0.1, 0.3,1,3,10))
 
 
 ```
@@ -510,7 +518,7 @@ deaths %>%
   scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
   scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
   # facet_wrap(~ state) +
-  coord_cartesian(ylim = c(0,5)) +
+  coord_cartesian(ylim = c(0.3,10)) +
   theme_common() +
   theme(aspect.ratio = 9 / 16,
       axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12),
@@ -519,6 +527,9 @@ deaths %>%
       axis.text.y = element_text(size = 10),
       plot.title.position = "panel",
       ) +
+  guides(
+    color = guide_legend(override.aes = list(size = 1))
+  ) +
   labs(
     title = "Death Disparities over Time by Race",
     x = "Date",
@@ -527,7 +538,8 @@ deaths %>%
     size = str_wrap("Average or Instantaneous", width = 20),
     color = "Race"
   ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b")
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  scale_y_log10(breaks = c(0.1,0.3,1,3,10))
 
 
 ```
