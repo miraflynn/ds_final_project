@@ -306,17 +306,25 @@ tests %>%
   geom_line(aes(x = date, y = tests_to_pop_ratio, color = race, alpha = avg_or_inst, size = avg_or_inst)) +
   scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
   scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
-  facet_wrap(~ state) +
+  # facet_wrap(~ state) +
   coord_cartesian(ylim = c(0,5)) +
   theme_common() +
-  theme(aspect.ratio = 9 / 16) +
+  theme(aspect.ratio = 9 / 16,
+      axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12),
+      axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 12, angle = 90),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      plot.title.position = "panel",
+      ) +
   labs(
+    title = "Test Disparities over Time by Race",
     x = "Date",
     y = "Race Test % to Race Population %",
     alpha = str_wrap("Average or Instantaneous", width = 20),
     size = str_wrap("Average or Instantaneous", width = 20),
     color = "Race"
-  )
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b")
 
 
 ```
@@ -400,17 +408,25 @@ cases %>%
   geom_line(aes(x = date, y = cases_to_pop_ratio, color = race, alpha = avg_or_inst, size = avg_or_inst)) +
   scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
   scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
-  facet_wrap(~ state) +
+  # facet_wrap(~ state) +
   coord_cartesian(ylim = c(0,5)) +
   theme_common() +
-  theme(aspect.ratio = 9 / 16) +
+  theme(aspect.ratio = 9 / 16,
+      axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12),
+      axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 12, angle = 90),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      plot.title.position = "panel",
+      ) +
   labs(
+    title = "Case Disparities over Time by Race",
     x = "Date",
-    y = "Race Test % to Race Population %",
+    y = "Race Case % to Race Population %",
     alpha = str_wrap("Average or Instantaneous", width = 20),
     size = str_wrap("Average or Instantaneous", width = 20),
     color = "Race"
-  )
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b")
 
 
 ```
@@ -493,17 +509,25 @@ deaths %>%
   geom_line(aes(x = date, y = deaths_to_pop_ratio, color = race, alpha = avg_or_inst, size = avg_or_inst)) +
   scale_alpha_manual(values = c("Instantaneous" = 0.25, "30 Day Average" = 1)) +
   scale_size_manual(values = c("Instantaneous" = 0.5, "30 Day Average" = 1)) +
-  facet_wrap(~ state) +
+  # facet_wrap(~ state) +
   coord_cartesian(ylim = c(0,5)) +
   theme_common() +
-  theme(aspect.ratio = 9 / 16) +
+  theme(aspect.ratio = 9 / 16,
+      axis.title.x = element_text(margin = margin(4, 4, 4, 4), size = 12),
+      axis.title.y = element_text(margin = margin(4, 4, 4, 4), size = 12, angle = 90),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      plot.title.position = "panel",
+      ) +
   labs(
+    title = "Death Disparities over Time by Race",
     x = "Date",
-    y = "Race Test % to Race Population %",
+    y = "Race Death % to Race Population %",
     alpha = str_wrap("Average or Instantaneous", width = 20),
     size = str_wrap("Average or Instantaneous", width = 20),
     color = "Race"
-  )
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b")
 
 
 ```
