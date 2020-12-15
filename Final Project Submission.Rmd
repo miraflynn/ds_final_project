@@ -16,7 +16,21 @@ library(runner)
 source("cleaning.R")
 set.seed(42)
 ```
-## R Markdown
+## Question 
+Are there racial inequalities in Covid rates in the US?
+
+Story we want to tell is that this is the case, test and death data by race
+We cannot compare due to high testing inconsistancies
+this trend can apply in states but we can also see alternative trends
+Therefore more consistant race reporting is needed to better understand racial impact
+States should examine thier situation individually and develop programs to aleviate inequality
+Overall we need to implement better safety/testing programs to reduce inequality
+focus on lessening inequality
+(confounding variable is economic status)
+(both in being essential workers and in ability to get tested/decision to go to hospital)
+ANSWER: Despite inconsistancies in the data there are clear major racial inequities due to covid
+
+
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
@@ -26,12 +40,33 @@ When you click the **Knit** button a document will be generated that includes bo
 summary(cars)
 ```
 
-## Including Plots
+#Case Test and Death Data
 
 You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
+```{r Case Data by Race, echo=FALSE}
 plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r Test Data by Race, echo=FALSE}
+plot(pressure)
+```
+
+```{r Death Data by Race, echo=FALSE}
+plot(pressure)
+```
+
+
+#Test Reporting Inconsistencies
+
+```{r Case Data by Race Inconsistencies, echo=FALSE}
+plot(pressure)
+```
+
+```{r Test Data by Race Inconsistencies, echo=FALSE}
+plot(pressure)
+```
+
+```{r Death Data by Race Inconsistencies, echo=FALSE}
+plot(pressure)
+```
